@@ -204,6 +204,7 @@
     // Sources.
     const t = now / 1000;
     if (ui.stars) for (const s of S.sources) if (s.kind === 'star') drawStar(c, s, cx, cy, R);
+    labelsOn = !$('beaconSheet').hidden;
     for (const s of S.sources) if (s.kind === 'beacon') drawBeacon(c, s, cx, cy, R, t);
 
     // You.
@@ -241,6 +242,7 @@
     circle(c, x, y, rad); c.fill();
   }
 
+  let labelsOn = false;
   function drawBeacon(c, s, cx, cy, R, t) {
     const e = s.obs;
     if (!e || e.z1 > Z_LOST) return;
@@ -291,10 +293,12 @@
       c.setLineDash([]);
     }
 
-    c.fillStyle = `rgba(230,236,255,${0.45 + 0.4 * Math.min(1, al)})`;
-    c.font = '10px system-ui, sans-serif';
-    c.textAlign = 'left';
-    c.fillText(`B${s.id} #${Math.floor(e.tau / MSG_PERIOD)}`, x + 7, y - 6);
+    if (labelsOn) {                 // names only while the beacon list is open
+      c.fillStyle = `rgba(230,236,255,${0.45 + 0.4 * Math.min(1, al)})`;
+      c.font = '10px Inter, system-ui, sans-serif';
+      c.textAlign = 'left';
+      c.fillText(`B${s.id} #${Math.floor(e.tau / MSG_PERIOD)}`, x + 7, y - 6);
+    }
   }
 
   // ---------- spectrum strip ----------
