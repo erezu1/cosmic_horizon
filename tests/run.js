@@ -149,5 +149,24 @@ for (const m0 of [0, 0.75]) {
   if (!(isFinite(t2) && sg2 === -1)) failures++;
 }
 
+// 10. A shell overtaking a slow particle kicks it inward: ṙ jumps by −Δm·u̇/2 (u̇ continuous).
+//     Strong enough kicks turn it around; it then falls back to r = 0 and the worldline ends there.
+{
+  const st = new Spacetime(0.64);
+  const a = st.aR[0], v = 0.05, g = 1 / Math.sqrt(1 - v * v);
+  const w = new Worldline(-2, 0, g * (1 - v) / a, 0);
+  w.advance(st, 0);
+  const n = w.U.length - 1, r0 = w.R[n], ud0 = w.Ud[n];
+  const rdotOld = (1 - (1 - 0.64 - r0 * r0) * ud0 * ud0) / (2 * ud0);
+  st.addShell(0, 0.2);
+  w.advance(st, 1e-9);
+  const k = w.U.length - 1;
+  const rdotNew = (1 - (1 - 0.44 - w.R[k] * w.R[k]) * w.Ud[k] * w.Ud[k]) / (2 * w.Ud[k]);
+  check('shell kick: ṙ_new − ṙ_old = −Δm u̇/2', rdotNew - rdotOld, -0.2 * ud0 / 2, 1e-6);
+  w.advance(st, 50);
+  console.log(`${w.absorbed && w.R[w.R.length - 1] === 0 && w.U.length < 5000 ? 'ok  ' : 'FAIL'} slow particle falls back to r = 0 and stops (${w.U.length} samples)`);
+  if (!(w.absorbed && w.U.length < 5000)) failures++;
+}
+
 console.log(failures ? `\n${failures} FAILED` : '\nall passed');
 process.exit(failures ? 1 : 0);

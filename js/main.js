@@ -615,7 +615,8 @@
       const sw = `<span class="sw" style="background:hsl(${s.hue},85%,68%)"></span>`;
       const head = `${sw}<b>B${s.id}</b><span>v=${s.v.toFixed(2)}c</span>`;
       if (!e || e.z1 > Z_LOST) {
-        return `<div class="b gone">${head}<span>last message #${s.msg}</span><span>gone: 1+z &gt; 10⁷</span></div>`;
+        const why = s.wl.absorbed ? 'fell back into you' : 'gone: 1+z &gt; 10⁷';
+        return `<div class="b gone">${head}<span>last message #${s.msg}</span><span>${why}</span></div>`;
       }
       const col = Colors.rgb(e.lam, false);
       const z = e.z1 < 1000 ? e.z1.toFixed(e.z1 < 10 ? 2 : 1) : e.z1.toExponential(1);

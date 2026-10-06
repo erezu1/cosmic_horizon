@@ -248,7 +248,17 @@ const DS = (function () {
         let toShell = false, prov = false;
         if (u + h >= uNext) { h = uNext - u; toShell = true; }
         if (u + h > uTarget) { h = uTarget - u; prov = true; toShell = false; }
-        const s = rk4(r, ud, m, h);
+        let s = rk4(r, ud, m, h);
+        if (s[0] <= 0) {
+          // Turned around by a shell and fell back to r = 0: it has hit you. End the
+          // worldline exactly at r = 0 (bisect the step length) and stop.
+          let lo = 0, hi = h;
+          for (let it = 0; it < 50; it++) { const mid = 0.5 * (lo + hi); if (rk4(r, ud, m, mid)[0] > 0) lo = mid; else hi = mid; }
+          s = rk4(r, ud, m, hi);
+          this._push(u + hi, 0, s[1], T + s[2]);
+          this.done = true; this.absorbed = true;
+          break;
+        }
         u = toShell ? uNext : u + h; r = s[0]; ud = s[1]; T += s[2];
         this._push(u, r, ud, T);
         if (prov) { this.prov = true; break; }
@@ -262,6 +272,7 @@ const DS = (function () {
     const n = wl.U.length - 1;
     let u = wl.U[n], r = wl.R[n], ud = wl.Ud[n];
     const U = [u], R = [r];
+    if (wl.absorbed) return { U, R };
     let guard = 0;
     while (r < rEnd && guard++ < 4000) {
       const k = st.region(u), m = st.mR[k];
@@ -271,6 +282,7 @@ const DS = (function () {
       let toShell = false;
       if (u + h >= uNext) { h = uNext - u; toShell = true; }
       const s = rk4(r, ud, m, h);
+      if (s[0] <= 0) { U.push(u + h); R.push(0); break; }   // will fall back into you
       u = toShell ? uNext : u + h; r = s[0]; ud = s[1];
       U.push(u); R.push(r);
     }
