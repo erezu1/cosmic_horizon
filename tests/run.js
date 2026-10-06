@@ -108,5 +108,33 @@ for (const m0 of [0, 0.75]) {
   if (!(V < 0)) failures++;
 }
 
+// 8. Pre-game launches: shells at negative u (stars launched before τ = 0).
+{
+  const st = new Spacetime(0.84);
+  const stars = [];
+  for (const t of [-3.4, -1.9, -0.4]) {
+    const u = st.uOfTau(t);
+    st.addShell(u, 0.2 / 3);
+    const a = st.aR[st.region(u)];
+    stars.push(new Worldline(u, 0, (1 / Math.sqrt(1 - 0.09)) * 0.7 / a, 0));
+  }
+  check('clock: τ(u(0)) = 0', st.tau(st.uOfTau(0)) + 1, 1, 1e-12);
+  check('mass at τ=0 is M0', st.mNow, 0.64, 1e-12);
+  for (const tau of [0, 1.5]) {
+    const u = st.uOfTau(tau);
+    stars.forEach((w, i) => {
+      w.advance(st, u);
+      const e = findEmission(w, st.pastCone(u), st, 0);
+      const dt = 1e-5;
+      const e2 = findEmission(w, st.pastCone(st.uOfTau(tau + dt)), st, 0);
+      check(`pre-game star ${i} redshift vs time-of-flight τ=${tau}`, e.z1, dt / (e2.tau - e.tau), 1e-4);
+      check(`pre-game star ${i} arrival τ=${tau}`, arrival(st, e.u, e.r) + 10, tau + 10, 1e-10);
+    });
+  }
+  const V = st.labelFromV0(-1 / Math.tan(-0.3));   // a point on the antipode's worldline
+  console.log(`${isFinite(V) ? 'ok  ' : 'FAIL'} antipode label finite with pre-game shells (V=${V.toExponential(3)})`);
+  if (!isFinite(V)) failures++;
+}
+
 console.log(failures ? `\n${failures} FAILED` : '\nall passed');
 process.exit(failures ? 1 : 0);

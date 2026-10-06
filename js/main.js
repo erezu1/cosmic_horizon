@@ -20,6 +20,7 @@
     ui.dm = +$('dm').value;
     ui.v = +$('v').value;
     ui.m0 = +$('m0').value;
+    ui.mStars = +$('mStars').value;
     ui.ir = $('ir').checked;
     ui.waves = $('waves').checked;
     ui.oldH = $('oldH').checked;
@@ -27,9 +28,11 @@
     $('speedVal').textContent = ui.speed.toFixed(2) + ' ℓ/s';
     $('dmVal').textContent = ui.dm.toFixed(2) + ' /8G';
     $('vVal').textContent = ui.v.toFixed(2) + 'c';
-    $('m0Val').textContent = ui.m0.toFixed(2) + ' /8G' + (S && Math.abs(ui.m0 - S.st.m0) > 1e-9 ? ' (on reset)' : '');
+    const pending = S && (Math.abs(ui.m0 - S.m0) > 1e-9 || Math.abs(ui.mStars - S.mStars) > 1e-9);
+    $('m0Val').textContent = ui.m0.toFixed(2) + ' /8G' + (pending ? ' · on reset' : '');
+    $('mStarsVal').textContent = ui.mStars.toFixed(2) + ' /8G' + (pending ? ' · on reset' : '');
   }
-  for (const id of ['speed', 'dm', 'v', 'm0', 'ir', 'waves', 'oldH', 'stars']) $(id).addEventListener('input', readUI);
+  for (const id of ['speed', 'dm', 'v', 'm0', 'mStars', 'ir', 'waves', 'oldH', 'stars']) $(id).addEventListener('input', readUI);
 
   // ---------- state ----------
   let S = null;
@@ -45,22 +48,36 @@
 
   const newPQ = () => ({ ver: -1, P: [], Q: [] });
 
+  // Before τ = 0 you launched the stars in bursts. Each burst cost you a slice of mass,
+  // radiated outward as a flash of light (an exact Vaidya shell); the stars are test particles.
+  const STAR_BURSTS = [-3.4, -2.6, -1.9, -1.3, -0.8, -0.4];   // your proper time (ℓ)
+  const STAR_V = [0.05, 0.45];                                // launch speeds
+
   function reset() {
     readUI();
-    const st = new Spacetime(ui.m0);
-    const a = st.aR[0];
+    const mStars = Math.min(ui.mStars, Math.max(0, 0.96 - ui.m0));
+    const st = new Spacetime(ui.m0 + mStars);
     const rnd = mulberry32(20261006);
     const sources = [];
-    for (let i = 0; i < N_STARS; i++) {
-      const x = 0.03 + 0.8 * Math.pow(rnd(), 1.15);    // seen at x·r_c at τ = 0
-      sources.push({
-        kind: 'star', phi: rnd() * TAU, wl: makeHubbleStar(st, x * a),
-        lamEm: 395 + 80 * rnd(), size: 0.9 + 1.5 * rnd() * rnd(), jit: rnd(), rot: 0.25 * (rnd() - 0.5),
-        hint: 1e9, obs: null, pq: newPQ(), tail: null,
-      });
+    const perBurst = Math.round(N_STARS / STAR_BURSTS.length);
+    for (const tb of STAR_BURSTS) {
+      const u = st.uOfTau(tb);
+      if (mStars > 0) st.addShell(u, mStars / STAR_BURSTS.length);
+      const a = st.aR[st.region(u)];
+      const off = rnd() * TAU;
+      for (let j = 0; j < perBurst; j++) {
+        const v = STAR_V[0] + (STAR_V[1] - STAR_V[0]) * rnd();
+        const g = 1 / Math.sqrt(1 - v * v);
+        sources.push({
+          kind: 'star', phi: off + TAU * (j + 0.8 * (rnd() - 0.5)) / perBurst,
+          wl: new Worldline(u, 0, g * (1 - v) / a, 0),
+          lamEm: 395 + 80 * rnd(), size: 0.9 + 1.5 * rnd() * rnd(), jit: rnd(), rot: 0.25 * (rnd() - 0.5),
+          hint: 1e9, obs: null, pq: newPQ(), tail: null,
+        });
+      }
     }
     const playing = S ? S.playing : true;
-    S = { st, sources, tau: 0, u: 0, playing, nBeacons: 0, flashes: [], frame: 0, cone: null,
+    S = { st, sources, tau: 0, u: 0, playing, m0: ui.m0, mStars: ui.mStars, nBeacons: 0, flashes: [], frame: 0, cone: null,
           ring: S ? S.ring : false, pen: { ver: -1 }, tailFrame: -1 };
     readUI();
     step();
@@ -400,7 +417,7 @@
     const ah = [];
     const nR = st.aR.length;
     for (let k = 0; k < nR; k++) {
-      const uLo = k === 0 ? -12 : st.shellU[k - 1];
+      const uLo = k === 0 ? Math.min(-12, (st.shellU.length ? st.shellU[0] : 0) - 8) : st.shellU[k - 1];
       const uHi = k < nR - 1 ? st.shellU[k] : uLo + 60;
       const M = 80, seg = [];
       for (let i = 0; i <= M; i++) {

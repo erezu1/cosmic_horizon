@@ -151,7 +151,9 @@ const DS = (function () {
      */
     labelFromV0(V0) {
       const a0 = this.aR[0];
-      const uRef = -1, U0 = Math.exp(a0 * uRef);
+      // A reference slice before the first shell (shells may lie at u < 0: pre-game launches).
+      const uRef = Math.min(-1, this.shellU.length ? this.shellU[0] - 1 : -1);
+      const U0 = Math.exp(a0 * uRef);
       const w = U0 * V0;
       if (w <= -1 || w >= 1) return V0;      // ray ends before any shell exists
       return this.labelV(uRef, a0 * (1 + w) / (1 - w));

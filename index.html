@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="style.css?v=17">
+<link rel="stylesheet" href="style.css?v=18">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -94,8 +94,10 @@
       <input type="range" id="dm" min="0" max="0.25" step="0.01" value="0.05"></label>
     <label class="field"><span>Beacon speed v <output id="vVal"></output></span>
       <input type="range" id="v" min="0.5" max="0.99" step="0.01" value="0.8"></label>
-    <label class="field"><span>Starting mass M₀ <output id="m0Val"></output></span>
+    <label class="field"><span>Your mass at start M₀ <output id="m0Val"></output></span>
       <input type="range" id="m0" min="0" max="0.95" step="0.01" value="0.64"></label>
+    <label class="field"><span>Mass you spent on stars <output id="mStarsVal"></output></span>
+      <input type="range" id="mStars" min="0" max="0.3" step="0.01" value="0.2"></label>
     <div class="switches">
       <label class="switch"><input type="checkbox" id="ir"><span></span>Infrared camera</label>
       <label class="switch"><input type="checkbox" id="waves" checked><span></span>Wave glyphs</label>
@@ -139,7 +141,8 @@
     <p><b>Now</b> (the default) applies $U\to U e^{-\tau/\ell},\ V\to V e^{\tau/\ell}$, a translation in static time that leaves your worldline and $\mathscr{I}^+$ fixed. The present sits mid-left, and the earlier history is squeezed against the past horizon. Once you have radiated all your mass, the neighbourhood of now is visibly the static patch of empty de Sitter.</p>
 
     <h3>Launching</h3>
-    <p>Each launch radiates $\Delta M$ as an outgoing null shell. This is exact for a ring; a single beacon's mass is spread over a ring (s-wave approximation). Stars and beacons are test particles: stars follow the Hubble flow, $\dot r = r/\ell$, and beacons are launched at speed $v$. Brightness is schematic.</p>
+    <p>Each launch radiates $\Delta M$ as an outgoing null shell. This is exact for a ring; a single beacon's mass is spread over a ring (s-wave approximation). Beacons are test particles launched at speed $v$. Brightness is schematic.</p>
+    <p><b>The stars came from you.</b> You started heavier, with mass $M_0 + M_\star$. Before $\tau = 0$ you launched the stars in six bursts, at speeds between $0.05c$ and $0.45c$. Each burst cost you $M_\star/6$, radiated as a light flash (the same Vaidya shell as a beacon launch), and the stars themselves are test particles. That is why the game opens with a ring of older, smaller horizons and a visible edge still catching up with $r_c$.</p>
 
     <h3>Things to notice</h3>
     <ul>
@@ -153,8 +156,8 @@
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="js/physics.js?v=17"></script>
-<script src="js/colors.js?v=17"></script>
-<script src="js/main.js?v=17"></script>
+<script src="js/physics.js?v=18"></script>
+<script src="js/colors.js?v=18"></script>
+<script src="js/main.js?v=18"></script>
 </body>
 </html>
