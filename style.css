@@ -276,3 +276,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .sheet, .sheet.closing { animation-duration: 0.01s; }
   .icon, .tool { transition: none; }
 }
+@media (max-width: 560px) {
+  .brand .tag { display: none; }
+}
