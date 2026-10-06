@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="style.css?v=21">
+<link rel="stylesheet" href="style.css?v=22">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -146,7 +146,7 @@
     <p><b>Now</b> (the default) applies $U\to U e^{-\tau/\ell},\ V\to V e^{\tau/\ell}$, a translation in static time that leaves your worldline and $\mathscr{I}^+$ fixed. The present sits mid-left, and the earlier history is squeezed against the past horizon. Once you have radiated all your mass, the neighbourhood of now is visibly the static patch of empty de Sitter.</p>
 
     <h3>Launching</h3>
-    <p>Each launch radiates $\Delta M$ as an outgoing null shell. This is exact for a ring; a single beacon's mass is spread over a ring (s-wave approximation). Beacons are test particles launched at speed $v$. Brightness is schematic.</p>
+    <p>Each launch radiates $\Delta M$ outward over $0.2\,\ell$ of your time, as 8 thin null shells. This is exact for a ring; a single beacon's mass is spread over a ring (s-wave approximation). Beacons are test particles launched at speed $v$. Brightness is schematic.</p>
     <p><b>The stars came from you.</b> You started heavier, with mass $M_0 + M_\star$. Before $\tau = 0$ you launched the stars in six bursts, at speeds between $0.05c$ and $0.45c$. Each burst cost you $M_\star/6$, radiated as a light flash (the same Vaidya shell as a beacon launch), and the stars themselves are test particles. That is why the game opens with a ring of older, smaller horizons and a visible edge still catching up with $r_c$.</p>
 
     <h3>Things to notice</h3>
@@ -154,15 +154,15 @@
       <li>Stars recede and redden as $1+z\propto e^{\tau/\ell}$, whatever the mass. The temperature you measure is $1/2\pi\ell$ for any $M$; the mass changes the horizon's size and entropy, not how fast things fade.</li>
       <li>Images pile up at the horizon and never cross it. Each beacon has a last message you will ever receive.</li>
       <li>Which message is last depends on your future. Launch a beacon, then emit a big $\Delta M$ within about $0.2\ell$. The shell overtakes the beacon while it is still inside the new horizon, so you receive more messages and it freezes farther out. Emit later and nothing changes: you were seeing old light from a beacon that had already left.</li>
-      <li>Just after you emit, sources outside the shell look bluer by $\sqrt{1-8GM_{\text{old}}}\big/\sqrt{1-8GM_{\text{new}}}$, because their light gains energy crossing the shell.</li>
+      <li>While you emit, sources outside the shell turn bluer, ramping up over the $0.2\,\ell$ launch to a factor $\sqrt{1-8GM_{\text{old}}}\big/\sqrt{1-8GM_{\text{new}}}$. Their light crosses the shell to reach you, and inside a moving shell clocks run at a different rate: the two cones, with different deficit angles, are glued along the expanding circle. Unlike 3+1, this step does not fade as the shell grows, because 2+1 gravity has no length scale. Each source returns to normal once the shell has passed it. The shell also kicks slow objects inward, so slow stars can fall back to you.</li>
     </ul>
   </section>
 </div>
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="js/physics.js?v=21"></script>
-<script src="js/colors.js?v=21"></script>
-<script src="js/main.js?v=21"></script>
+<script src="js/physics.js?v=22"></script>
+<script src="js/colors.js?v=22"></script>
+<script src="js/main.js?v=22"></script>
 </body>
 </html>

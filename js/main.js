@@ -8,6 +8,8 @@
   const MSG_PERIOD = 0.05;      // beacon proper time between numbered messages (ℓ)
   const Z_LOST = 1e7;           // beyond this, treat a source as gone from view
   const N_STARS = 90;
+  const BURST_TIME = 0.2;        // a launch radiates its ΔM over this much of your time (ℓ)…
+  const BURST_STEPS = 8;         // …as this many thin shells, so the effects ramp instead of jumping
   const RING_N = 12;
 
   const sky = $('sky'), spec = $('spectrum'), pen = $('penrose');
@@ -59,9 +61,11 @@
     const st = new Spacetime(ui.m0 + mStars);
     const rnd = mulberry32(20261006);
     const sources = [];
+    const oldHorizons = [];
     const perBurst = Math.round(N_STARS / STAR_BURSTS.length);
     for (const tb of STAR_BURSTS) {
       const u = st.uOfTau(tb);
+      oldHorizons.push(st.aNow);
       if (mStars > 0) st.addShell(u, mStars / STAR_BURSTS.length);
       const a = st.aR[st.region(u)];
       const off = rnd() * TAU;
@@ -78,6 +82,7 @@
     }
     const playing = S ? S.playing : true;
     S = { st, sources, tau: 0, u: 0, playing, m0: ui.m0, mStars: ui.mStars, nBeacons: 0, flashes: [], frame: 0, cone: null,
+          pending: [], oldHorizons,
           ring: S ? S.ring : false, pen: { ver: -1 }, tailFrame: -1 };
     readUI();
     step();
@@ -86,8 +91,13 @@
 
   function fire(phi, ring) {
     const st = S.st;
-    const dm = Math.min(ui.dm, st.mNow);
-    if (dm > 1e-9) st.addShell(S.u, dm);
+    const still = S.pending.reduce((x, p) => x + p.dm, 0);
+    const dm = Math.min(ui.dm, Math.max(0, st.mNow - still));
+    if (dm > 1e-9) {
+      S.oldHorizons.push(st.aNow);
+      for (let k = 0; k < BURST_STEPS; k++) S.pending.push({ tau: S.tau + BURST_TIME * k / BURST_STEPS, dm: dm / BURST_STEPS });
+      releasePending();
+    }
     const a = st.aR[st.region(S.u)];
     const v = ui.v, g = 1 / Math.sqrt(1 - v * v);
     const n = ring ? RING_N : 1;
@@ -108,9 +118,17 @@
   }
 
   // ---------- physics step ----------
+  // Release the thin shells of ongoing launches whose time has come (at "now").
+  function releasePending() {
+    let dm = 0;
+    S.pending = S.pending.filter(p => (p.tau <= S.tau + 1e-12 ? (dm += p.dm, false) : true));
+    if (dm > 0) S.st.addShell(S.u, Math.min(dm, S.st.mNow));
+  }
+
   function step() {
     const st = S.st;
     S.u = st.uOfTau(S.tau);
+    releasePending();
     for (const s of S.sources) if (!s.gone) s.wl.advance(st, S.u);
     const cone = st.pastCone(S.u);
     S.cone = cone;
@@ -184,7 +202,7 @@
     if (ui.oldH) {
       c.setLineDash([2, 4]);
       c.strokeStyle = 'rgba(127,208,255,0.28)';
-      for (let k = 0; k < st.aR.length - 1; k++) { circle(c, cx, cy, st.aR[k] * R); c.stroke(); }
+      for (const a of S.oldHorizons) if (Math.abs(a - aNow) > 1e-4) { circle(c, cx, cy, a * R); c.stroke(); }
       c.setLineDash([]);
     }
 
@@ -352,11 +370,14 @@
       }
       c.fillStyle = g; c.fillRect(x0, top, x1 - x0, bot - top);
     } else {
-      const bands = [[100, 380, [90, 60, 160]], [750, 1e6, [90, 20, 25]], [1e6, 1e9, [45, 50, 70]], [1e9, 1e10, [30, 32, 45]]];
+      const bands = [[750, 1e6, [90, 20, 25]], [1e6, 1e9, [45, 50, 70]], [1e9, 1e10, [30, 32, 45]]];
       for (const [a, b, col] of bands) { c.fillStyle = rgba(col, 0.45); c.fillRect(X(a), top, X(b) - X(a), bot - top); }
-      const g = c.createLinearGradient(X(380), 0, X(750), 0);
-      for (let nm = 380; nm <= 750; nm += 20) g.addColorStop((nm - 380) / 370, rgba(Colors.visibleRGB(nm), 0.8));
-      c.fillStyle = g; c.fillRect(X(380), top, X(750) - X(380), bot - top);
+      // UV through visible, with the same colours the sky uses (UV fades to white).
+      const g = c.createLinearGradient(X(100), 0, X(750), 0);
+      for (const nm of [100, 150, 200, 250, 300, 340, 380, 400, 420, 440, 470, 500, 530, 560, 590, 620, 650, 680, 710, 750]) {
+        g.addColorStop((Math.log10(nm) - 2) / (Math.log10(750) - 2), rgba(Colors.physicalRGB(nm), nm < 380 ? 0.55 : 0.8));
+      }
+      c.fillStyle = g; c.fillRect(X(100), top, X(750) - X(100), bot - top);
     }
 
     c.font = '11.5px Inter, system-ui, sans-serif';
@@ -544,7 +565,7 @@
     }
 
     // Shells.
-    c.strokeStyle = 'rgba(255,154,74,0.8)';
+    c.strokeStyle = 'rgba(255,154,74,0.55)';   // each launch is several thin shells
     c.lineWidth = 1.2;
     for (let k = 0; k < st.shellU.length; k++) {
       const lnU = st.tauR[k + 1];

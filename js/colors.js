@@ -12,8 +12,7 @@ const Colors = (function () {
     else if (nm < 645) { r = 1; g = -(nm - 645) / 65; }
     else { r = 1; }
     let k = 1;
-    if (nm < 420) k = 0.35 + 0.65 * (nm - 380) / 40;
-    else if (nm > 680) k = 0.35 + 0.65 * (750 - nm) / 70;
+    if (nm > 680) k = 0.35 + 0.65 * (750 - nm) / 70;
     const c = x => Math.round(255 * Math.pow(Math.max(0, x * k), 0.8));
     return [c(r), c(g), c(b)];
   }
@@ -28,8 +27,11 @@ const Colors = (function () {
 
   const lerp = (a, b, t) => a.map((x, i) => Math.round(x + (b[i] - x) * t));
 
+  // Violet → lavender → white towards the ultraviolet (brighter, not darker).
+  const LAVENDER = [222, 212, 255];
   function physicalRGB(nm) {
-    if (nm < 380) return [150, 110, 255];
+    if (nm < 380) return lerp(LAVENDER, [255, 255, 255], Math.min(1, (380 - nm) / 130));
+    if (nm < 430) return lerp(LAVENDER, visibleRGB(430), (nm - 380) / 50);
     if (nm < 750) return visibleRGB(nm);
     if (nm < 1e6) {
       const t = Math.log10(nm / 750) / Math.log10(1e6 / 750);
