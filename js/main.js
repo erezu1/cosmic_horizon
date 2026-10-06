@@ -197,7 +197,8 @@
     c.fillText(`horizon  r꜀ = ${aNow.toFixed(3)} ℓ`, cx, ly);
     if (catching) {
       c.fillStyle = 'rgba(160,215,255,0.75)';
-      c.fillText(`visible edge ${rEdge.toFixed(3)} ℓ (catching up)`, cx, cy + rh + 16 > h - 4 ? cy + rh - 10 : cy + rh + 16);
+      // Glued to the solid circle, just inside its bottom.
+      c.fillText(`visible edge ${rEdge.toFixed(3)} ℓ`, cx, cy + re - 9);
     }
 
     // Sources.
