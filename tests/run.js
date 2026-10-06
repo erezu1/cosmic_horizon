@@ -136,5 +136,18 @@ for (const m0 of [0, 0.75]) {
   if (!isFinite(V)) failures++;
 }
 
+// 9. Very late times: Penrose labels in log form stay finite (no e^{τ} overflow, τ ≫ 709).
+{
+  const st = new Spacetime(0.64);
+  st.addShell(1, 0.1);
+  const u = st.uOfTau(2000);
+  const [sg, t] = st.labelVlog(u, 0);
+  check('late-time observer label: t = τ', t, 2000, 1e-12);
+  check('late-time observer label: sign', sg, -1, 0);
+  const [sg2, t2] = st.labelVlog(u, 0.5 * st.aNow);
+  console.log(`${isFinite(t2) && sg2 === -1 ? 'ok  ' : 'FAIL'} late-time interior label finite (t=${t2.toFixed(3)})`);
+  if (!(isFinite(t2) && sg2 === -1)) failures++;
+}
+
 console.log(failures ? `\n${failures} FAILED` : '\nall passed');
 process.exit(failures ? 1 : 0);

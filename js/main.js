@@ -46,7 +46,7 @@
     };
   }
 
-  const newPQ = () => ({ ver: -1, P: [], Q: [] });
+  const newPQ = () => ({ ver: -1, P: [], S: [], T: [] });
 
   // Before τ = 0 you launched the stars in bursts. Each burst cost you a slice of mass,
   // radiated outward as a flash of light (an exact Vaidya shell); the stars are test particles.
@@ -399,19 +399,20 @@
    */
   let penSigma = 0;
   const mapP = lnU => Math.atan(Math.exp(lnU - penSigma));
-  const mapQ = V => Math.atan(V * Math.exp(penSigma));
+  // V = sg·exp(−t) is kept in log form so that the shift by e^{σ} never overflows.
+  const mapQ = (sg, t) => Math.atan(sg * Math.exp(penSigma - t));
 
   function rebuildPenroseStatic() {
     const st = S.st, N = 160;
     const right = [], bottom = [];
     for (let i = 1; i < N; i++) {                                // antipode (right edge), I⁻ (bottom edge)
       const P0 = -HALF * i / N, U0 = Math.tan(P0);
-      right.push([U0, st.labelFromV0(-1 / U0)]);
-      bottom.push([U0, st.labelFromV0(1 / U0)]);
+      right.push([U0, ...st.labelFromV0log(-1 / U0)]);
+      bottom.push([U0, ...st.labelFromV0log(1 / U0)]);
     }
     S.pen.right = right;
     S.pen.bottom = bottom.reverse();
-    S.pen.corner = st.labelFromV0(0);
+    S.pen.corner = st.labelFromV0log(0);
 
     // Apparent horizon r = r_c(M(u)) in every region (future part assumes no more emission).
     const ah = [];
@@ -423,7 +424,7 @@
       for (let i = 0; i <= M; i++) {
         const u = uLo + (uHi - uLo) * i / M;
         const uu = i === M && k < nR - 1 ? u - 1e-9 : u;
-        seg.push([st.tau(uu), st.labelV(uu, st.aR[k])]);
+        seg.push([st.tau(uu), ...st.labelVlog(uu, st.aR[k])]);
       }
       ah.push(seg);
     }
@@ -433,29 +434,31 @@
 
   function updatePQ(s) {
     const st = S.st, pq = s.pq, wl = s.wl;
-    if (pq.ver !== st.version) { pq.ver = st.version; pq.P.length = 0; pq.Q.length = 0; }
+    if (pq.ver !== st.version) { pq.ver = st.version; pq.P.length = 0; pq.S.length = 0; pq.T.length = 0; }
     const n = wl.committed;
     for (let i = pq.P.length; i < n; i++) {
-      pq.P.push(st.tau(wl.U[i])); pq.Q.push(st.labelV(wl.U[i], wl.R[i]));
+      const [sg, t] = st.labelVlog(wl.U[i], wl.R[i]);
+      pq.P.push(st.tau(wl.U[i])); pq.S.push(sg); pq.T.push(t);
     }
   }
 
   function updateTail(s) {
     const st = S.st;
     const t = tailOf(st, s.wl);
-    const P = [], Q = [], Uu = [];
+    const P = [], Sg = [], T = [], Uu = [];
     for (let i = 0; i < t.U.length; i++) {
       if (i % 2 && i !== t.U.length - 1) continue;
-      Uu.push(t.U[i]); P.push(st.tau(t.U[i])); Q.push(st.labelV(t.U[i], t.R[i]));
+      const [sg, tt] = st.labelVlog(t.U[i], t.R[i]);
+      Uu.push(t.U[i]); P.push(st.tau(t.U[i])); Sg.push(sg); T.push(tt);
     }
-    s.tail = { P, Q, U: Uu, ver: st.version };
+    s.tail = { P, S: Sg, T, U: Uu, ver: st.version };
   }
 
   // lnU / V arrays → polyline
-  function strokeRaw(c, g, L, V, i0 = 0, i1 = L.length) {
+  function strokeRaw(c, g, L, Sg, T, i0 = 0, i1 = L.length) {
     c.beginPath();
     for (let i = i0; i < i1; i++) {
-      const [x, y] = toXY(g, mapP(L[i]), mapQ(V[i]));
+      const [x, y] = toXY(g, mapP(L[i]), mapQ(Sg[i], T[i]));
       if (i === i0) c.moveTo(x, y); else c.lineTo(x, y);
     }
     c.stroke();
@@ -468,12 +471,12 @@
     let k = 0;
     while (k < t.U.length && t.U[k] <= S.u) k++;
     c.strokeStyle = solid;
-    strokeRaw(c, g, s.pq.P, s.pq.Q);
-    if (k > 0) strokeRaw(c, g, t.P, t.Q, 0, Math.min(k + 1, t.U.length));
+    strokeRaw(c, g, s.pq.P, s.pq.S, s.pq.T);
+    if (k > 0) strokeRaw(c, g, t.P, t.S, t.T, 0, Math.min(k + 1, t.U.length));
     if (k < t.U.length) {
       c.setLineDash([4, 4]);
       c.strokeStyle = dashed;
-      strokeRaw(c, g, t.P, t.Q, Math.max(0, k - 1), t.U.length);
+      strokeRaw(c, g, t.P, t.S, t.T, Math.max(0, k - 1), t.U.length);
       c.setLineDash([]);
     }
   }
@@ -490,15 +493,15 @@
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     c.clearRect(0, 0, w, h);
     const g = penGeom();
-    const Pn = mapP(S.tau), Qn = mapQ(-Math.exp(-S.tau));
+    const Pn = mapP(S.tau), Qn = mapQ(-1, S.tau);
     const eS = Math.exp(-penSigma);
 
     // Outline and clip.
     const outline = new Path2D();
     const pts = [[0, -HALF], [HALF, 0], [0, HALF]];               // you (left edge), I⁺ (top edge)
-    for (const [U0, V] of S.pen.right) pts.push([Math.atan(U0 * eS), mapQ(V)]);
-    pts.push([-HALF, mapQ(S.pen.corner)]);
-    for (const [U0, V] of S.pen.bottom) pts.push([Math.atan(U0 * eS), mapQ(V)]);
+    for (const [U0, sg, t] of S.pen.right) pts.push([Math.atan(U0 * eS), mapQ(sg, t)]);
+    pts.push([-HALF, mapQ(...S.pen.corner)]);
+    for (const [U0, sg, t] of S.pen.bottom) pts.push([Math.atan(U0 * eS), mapQ(sg, t)]);
     pts.forEach(([P, Q], i) => { const [x, y] = toXY(g, P, Q); if (i) outline.lineTo(x, y); else outline.moveTo(x, y); });
     outline.closePath();
     // The far side (antipode, I⁻) is relabelled by the shells and gets squeezed hard when
@@ -540,16 +543,16 @@
     c.strokeStyle = 'rgba(255,154,74,0.8)';
     c.lineWidth = 1.2;
     for (let k = 0; k < st.shellU.length; k++) {
-      const lnU = st.tauR[k + 1], U = Math.exp(lnU);
+      const lnU = st.tauR[k + 1];
       const P = mapP(lnU);
-      const [x1, y1] = toXY(g, P, mapQ(-1 / U)), [x2, y2] = toXY(g, P, mapQ(1 / U));
+      const [x1, y1] = toXY(g, P, mapQ(-1, lnU)), [x2, y2] = toXY(g, P, mapQ(1, lnU));
       c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
     }
 
     // Apparent horizon.
     c.strokeStyle = 'rgba(127,208,255,0.9)';
     c.lineWidth = 1.5;
-    for (const seg of S.pen.ah) strokeRaw(c, g, seg.map(p => p[0]), seg.map(p => p[1]));
+    for (const seg of S.pen.ah) strokeRaw(c, g, seg.map(p => p[0]), seg.map(p => p[1]), seg.map(p => p[2]));
 
     // Event horizon V = 0.
     c.setLineDash([5, 4]);
@@ -570,7 +573,7 @@
     for (const s of S.sources) {
       const e = s.obs;
       if (!e || e.z1 > Z_LOST || (s.kind === 'star' && !ui.stars)) continue;
-      const [x, y] = toXY(g, mapP(st.tau(e.u)), mapQ(st.labelV(e.u, e.r)));
+      const [x, y] = toXY(g, mapP(st.tau(e.u)), mapQ(...st.labelVlog(e.u, e.r)));
       c.fillStyle = s.kind === 'star' ? 'rgba(230,236,255,0.6)' : `hsl(${s.hue},85%,68%)`;
       circle(c, x, y, s.kind === 'star' ? 1.4 : 2.6); c.fill();
     }

@@ -126,17 +126,17 @@ const DS = (function () {
      * V = −exp(−τ(u_end)), or future infinity I⁺ at u_end, giving V = +exp(−τ(u_end)).
      * The observer's event horizon is V = 0.
      */
-    labelV(u, r) {
-      if (r === Infinity) return Math.exp(-this.tau(u));
+    labelV(u, r) { const [sg, t] = this.labelVlog(u, r); return sg * Math.exp(-t); }
+
+    // The same label as V = s·exp(−t), returned as [s, t]: safe for any τ (no overflow).
+    labelVlog(u, r) {
+      if (r === Infinity) return [1, this.tau(u)];
       let k = this.region(u), a = this.aR[k];
       let side = r <= a ? IN : OUT;
       let v = u + 2 * rstar(r, a);
       for (;;) {
         const uEnd = k < this.shellU.length ? this.shellU[k] : Infinity;
-        if (v <= uEnd) {
-          const t = this.tau(v);
-          return side === IN ? -Math.exp(-t) : Math.exp(-t);
-        }
+        if (v <= uEnd) return [side === IN ? -1 : 1, this.tau(v)];
         const rr = rOf((v - uEnd) / 2, a, side);
         k++; a = this.aR[k];
         side = rr <= a ? IN : OUT;
@@ -149,14 +149,16 @@ const DS = (function () {
      * m = m0) spacetime.  Needed for the part of the diagram behind the past horizon
      * (antipode, I⁻), which the u chart does not cover.
      */
-    labelFromV0(V0) {
+    labelFromV0(V0) { const [sg, t] = this.labelFromV0log(V0); return sg * Math.exp(-t); }
+
+    labelFromV0log(V0) {
       const a0 = this.aR[0];
       // A reference slice before the first shell (shells may lie at u < 0: pre-game launches).
       const uRef = Math.min(-1, this.shellU.length ? this.shellU[0] - 1 : -1);
       const U0 = Math.exp(a0 * uRef);
       const w = U0 * V0;
-      if (w <= -1 || w >= 1) return V0;      // ray ends before any shell exists
-      return this.labelV(uRef, a0 * (1 + w) / (1 - w));
+      if (w <= -1 || w >= 1) return [Math.sign(V0), -Math.log(Math.abs(V0))];   // ray ends before any shell
+      return this.labelVlog(uRef, a0 * (1 + w) / (1 - w));
     }
 
     // Penrose null coordinates (P, Q) ∈ (−π/2, π/2)² of the point (u, r).
