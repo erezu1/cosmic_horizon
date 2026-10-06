@@ -213,9 +213,13 @@
     const ly = cy - rh - 8 < 12 ? cy - rh + 16 : cy - rh - 8;
     c.fillText(`horizon  r꜀ = ${aNow.toFixed(3)} ℓ`, cx, ly);
     if (catching) {
-      c.fillStyle = 'rgba(160,215,255,0.75)';
-      // Glued to the solid circle, just inside its bottom.
-      c.fillText(`visible edge ${rEdge.toFixed(3)} ℓ`, cx, cy + re - 9);
+      // Just below the solid circle, on a dark pill so it stays legible over the dashed r_c.
+      const txt = `visible edge ${rEdge.toFixed(3)} ℓ`;
+      const tw = c.measureText(txt).width, ty = cy + re + 17;
+      c.fillStyle = 'rgba(4,6,13,0.78)';
+      c.beginPath(); c.roundRect(cx - tw / 2 - 7, ty - 13, tw + 14, 18, 9); c.fill();
+      c.fillStyle = 'rgba(190,225,255,0.95)';
+      c.fillText(txt, cx, ty);
     }
 
     // Sources.

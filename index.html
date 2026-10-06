@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="style.css?v=20">
+<link rel="stylesheet" href="style.css?v=21">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -131,9 +131,14 @@
     $$\begin{gathered} 1+z = \frac{d\tau_{\text{you}}}{d\tau_{\text{src}}} = \frac{\sqrt{1-8GM_{\text{now}}}}{\dot u\, f\, D},\\ D=\frac{dv}{du_{\text{arr}}}, \end{gathered}$$
     <p>where $\dot u$ is the source's $du/d\tau$ at emission, and $D$ picks up a factor $f_{\text{new}}/f_{\text{old}}$ at each shell crossing. Beacons transmit in the UV, tuned so you first receive them at 450 nm. The numbers count messages, one per $0.05\,\ell$ of beacon proper time.</p>
 
-    <h3>The horizon</h3>
-    <p>The dashed circle is $r_c$ for your mass now, and it jumps the moment you emit. The solid circle is the edge of what you can actually see, the outermost point of your past light cone. After an emission at time $\tau_e$ it catches up as light from the newly enclosed region reaches you:</p>
-    $$\begin{gathered} r_{\text{edge}} = \max\!\Bigl(r_c^{\text{old}},\; r_c^{\text{new}}\tanh\tfrac{\tau-\tau_e}{2\ell}\Bigr). \end{gathered}$$
+    <h3>The three circles</h3>
+    <ul>
+      <li><b>$r = \ell$, outer dotted circle (empty dS).</b> The horizon of empty de Sitter space, and the largest your horizon can ever get: you reach it once you have radiated all your mass.</li>
+      <li><b>$r_c$, dashed circle (horizon).</b> The cosmological horizon set by your mass now, $r_c = \ell\sqrt{1-8GM}$. It jumps outward the moment you emit. If you emit nothing more, this is where your event horizon ends up. When the visible edge has caught up with it, the two coincide and only one circle is drawn.</li>
+      <li><b>Solid circle (visible edge).</b> The farthest areal radius that light reaching your eye right now started from: the outermost point of your past light cone. Nothing you see can lie outside it. After an emission at time $\tau_e$ it catches up with $r_c$ as light from the newly enclosed region arrives:
+      $$\begin{gathered} r_{\text{edge}} = \max\!\Bigl(r_c^{\text{old}},\; r_c^{\text{new}}\tanh\tfrac{\tau-\tau_e}{2\ell}\Bigr). \end{gathered}$$</li>
+    </ul>
+    <p>The faint dotted rings inside are your earlier horizons, $r_c$ at each of your earlier masses.</p>
 
     <h3>The Penrose diagram</h3>
     <p>The diagram uses null coordinates $U = e^{\tau_{\text{out}}/\ell}$ and $V = \mp e^{-\tau_{\text{in}}/\ell}$, where $\tau_{\text{out}}$ ($\tau_{\text{in}}$) is your clock reading when the outgoing (ingoing) light ray through a point leaves (reaches) you, compactified with $\arctan$. Light always moves at 45°. Your worldline is $UV=-1$, $\mathscr{I}^+$ is $UV=1$, and the event horizon is $V=0$.</p>
@@ -156,8 +161,8 @@
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="js/physics.js?v=20"></script>
-<script src="js/colors.js?v=20"></script>
-<script src="js/main.js?v=20"></script>
+<script src="js/physics.js?v=21"></script>
+<script src="js/colors.js?v=21"></script>
+<script src="js/main.js?v=21"></script>
 </body>
 </html>
