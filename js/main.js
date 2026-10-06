@@ -333,7 +333,7 @@
     g.addColorStop(1, rgba(col, 0));
     c.fillStyle = g; circle(c, x, y, 14); c.fill();
     c.fillStyle = rgba(col, Math.min(1, 0.3 + al));
-    circle(c, x, y, 3.4); c.fill();
+    starPath(c, x, y, 7, 2.9, 0); c.fill();
 
     // Message flash: once per MSG_PERIOD of the beacon's own clock, as received.
     const ph = (e.tau / MSG_PERIOD) % 1;
