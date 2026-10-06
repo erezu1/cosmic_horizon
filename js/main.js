@@ -5,11 +5,16 @@
   const PI = Math.PI, HALF = PI / 2, TAU = 2 * PI;
 
   const SEEN_AT_LAUNCH = 450;   // nm: beacons are tuned so you first receive them blue
-  const MSG_PERIOD = 0.05;      // beacon proper time between numbered messages (ℓ)
+  // Everything you launch leaves at nearly the speed of light, so the mass it carries travels
+  // with it as a null shell (exact Vaidya, up to 1 − v = 0.1%), yet it can still signal back.
+  const V_LAUNCH = 0.999;
+  const GAMMA_LAUNCH = 1 / Math.sqrt(1 - V_LAUNCH * V_LAUNCH);
+  const DOP_LAUNCH = Math.sqrt((1 + V_LAUNCH) / (1 - V_LAUNCH));   // ≈ 45: launch Doppler factor
+  const MSG_PERIOD = 0.15 / DOP_LAUNCH;   // beacon proper time per message: one per 0.15ℓ of yours at launch
   const Z_LOST = 1e7;           // beyond this, treat a source as gone from view
   const N_STARS = 90;
-  const BURST_TIME = 0.2;        // a launch radiates its ΔM over this much of your time (ℓ)…
-  const BURST_STEPS = 8;         // …as this many thin shells, so the effects ramp instead of jumping
+  const BURST_TIME = 0.2;        // each pre-game star burst lasts this long (ℓ)…
+  const BURST_STEPS = 8;         // …as this many sub-launches, each star carrying its share of the mass
   const RING_N = 12;
 
   const sky = $('sky'), spec = $('spectrum'), pen = $('penrose');
@@ -20,7 +25,6 @@
   function readUI() {
     ui.speed = Math.pow(10, +$('speed').value);
     ui.dm = +$('dm').value;
-    ui.v = +$('v').value;
     ui.m0 = +$('m0').value;
     ui.mStars = +$('mStars').value;
     ui.ir = $('ir').checked;
@@ -29,12 +33,11 @@
     ui.stars = $('stars').checked;
     $('speedVal').textContent = ui.speed.toFixed(2) + ' ℓ/s';
     $('dmVal').textContent = ui.dm.toFixed(2) + ' /8G';
-    $('vVal').textContent = ui.v.toFixed(2) + 'c' + (S && Math.abs(ui.v - S.vStars) > 1e-9 ? ' · stars on reset' : '');
     const pending = S && (Math.abs(ui.m0 - S.m0) > 1e-9 || Math.abs(ui.mStars - S.mStars) > 1e-9);
     $('m0Val').textContent = ui.m0.toFixed(2) + ' /8G' + (pending ? ' · on reset' : '');
     $('mStarsVal').textContent = ui.mStars.toFixed(2) + ' /8G' + (pending ? ' · on reset' : '');
   }
-  for (const id of ['speed', 'dm', 'v', 'm0', 'mStars', 'ir', 'waves', 'oldH', 'stars']) $(id).addEventListener('input', readUI);
+  for (const id of ['speed', 'dm', 'm0', 'mStars', 'ir', 'waves', 'oldH', 'stars']) $(id).addEventListener('input', readUI);
 
   // ---------- state ----------
   let S = null;
@@ -61,14 +64,14 @@
     const sources = [];
     const oldHorizons = [];
     const perBurst = Math.round(N_STARS / STAR_BURSTS.length);
-    // Stars leave at the same launch speed as beacons and, like beacons, transmit bluer
-    // light, tuned so that at launch you would receive them in the visible.
-    const v = ui.v, g = 1 / Math.sqrt(1 - v * v), dop = Math.sqrt((1 + v) / (1 - v));
+    // Stars leave at the launch speed and, like beacons, transmit very blue light,
+    // tuned so that at launch you would receive them in the visible.
+    const v = V_LAUNCH, g = GAMMA_LAUNCH, dop = DOP_LAUNCH;
     for (const tb of STAR_BURSTS) {
       oldHorizons.push(st.aNow);
       const off = rnd() * TAU;
-      // Like a beacon launch: the burst's mass leaves as thin shells over BURST_TIME,
-      // and its stars are launched across the same window.
+      // The burst is BURST_STEPS sub-launches over BURST_TIME; each sub-launch's stars
+      // carry its share of the mass (one thin shell travelling with them).
       for (let k = 0; k < BURST_STEPS; k++) {
         const u = st.uOfTau(tb + BURST_TIME * k / BURST_STEPS);
         if (mStars > 0) st.addShell(u, mStars / STAR_BURSTS.length / BURST_STEPS);
@@ -84,8 +87,8 @@
       }
     }
     const playing = S ? S.playing : true;
-    S = { st, sources, tau: 0, u: 0, playing, m0: ui.m0, mStars: ui.mStars, vStars: ui.v, nBeacons: 0, flashes: [], frame: 0, cone: null,
-          pending: [], oldHorizons,
+    S = { st, sources, tau: 0, u: 0, playing, m0: ui.m0, mStars: ui.mStars, nBeacons: 0, flashes: [], frame: 0, cone: null,
+          oldHorizons,
           ring: S ? S.ring : false, pen: { ver: -1 }, tailFrame: -1 };
     readUI();
     step();
@@ -94,22 +97,18 @@
 
   function fire(phi, ring) {
     const st = S.st;
-    const still = S.pending.reduce((x, p) => x + p.dm, 0);
-    const dm = Math.min(ui.dm, Math.max(0, st.mNow - still));
-    if (dm > 1e-9) {
-      S.oldHorizons.push(st.aNow);
-      for (let k = 0; k < BURST_STEPS; k++) S.pending.push({ tau: S.tau + BURST_TIME * k / BURST_STEPS, dm: dm / BURST_STEPS });
-      releasePending();
-    }
+    // What you launch carries the mass: a thin shell leaving with it (s-wave for one beacon).
+    const dm = Math.min(ui.dm, st.mNow);
+    if (dm > 1e-9) { S.oldHorizons.push(st.aNow); st.addShell(S.u, dm); }
     const a = st.aR[st.region(S.u)];
-    const v = ui.v, g = 1 / Math.sqrt(1 - v * v);
+    const v = V_LAUNCH, g = GAMMA_LAUNCH;
     const n = ring ? RING_N : 1;
     for (let i = 0; i < n; i++) {
       const id = ++S.nBeacons;
       S.sources.push({
         kind: 'beacon', id, v, phi: phi + TAU * i / n,
         wl: new Worldline(S.u, 0, g * (1 - v) / a, 0),
-        lamEm: SEEN_AT_LAUNCH * Math.sqrt((1 - v) / (1 + v)),
+        lamEm: SEEN_AT_LAUNCH / DOP_LAUNCH,
         hue: (id * 137.508) % 360, jit: Math.random(),
         hint: 0, msg: 0, obs: null, pq: newPQ(), tail: null, tau0: S.tau,
       });
@@ -121,17 +120,9 @@
   }
 
   // ---------- physics step ----------
-  // Release the thin shells of ongoing launches whose time has come (at "now").
-  function releasePending() {
-    let dm = 0;
-    S.pending = S.pending.filter(p => (p.tau <= S.tau + 1e-12 ? (dm += p.dm, false) : true));
-    if (dm > 0) S.st.addShell(S.u, Math.min(dm, S.st.mNow));
-  }
-
   function step() {
     const st = S.st;
     S.u = st.uOfTau(S.tau);
-    releasePending();
     for (const s of S.sources) if (!s.gone) s.wl.advance(st, S.u);
     const cone = st.pastCone(S.u);
     S.cone = cone;
@@ -567,16 +558,6 @@
       drawWorldline(c, g, s, `hsla(${s.hue},85%,68%,0.85)`, `hsla(${s.hue},85%,68%,0.4)`);
     }
 
-    // Shells.
-    c.strokeStyle = 'rgba(255,154,74,0.55)';   // each launch is several thin shells
-    c.lineWidth = 1.2;
-    for (let k = 0; k < st.shellU.length; k++) {
-      const lnU = st.tauR[k + 1];
-      const P = mapP(lnU);
-      const [x1, y1] = toXY(g, P, mapQ(-1, lnU)), [x2, y2] = toXY(g, P, mapQ(1, lnU));
-      c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
-    }
-
     // Apparent horizon.
     c.strokeStyle = 'rgba(127,208,255,0.9)';
     c.lineWidth = 1.5;
@@ -641,7 +622,7 @@
     el.innerHTML = bs.map(s => {
       const e = s.obs;
       const sw = `<span class="sw" style="background:hsl(${s.hue},85%,68%)"></span>`;
-      const head = `${sw}<b>B${s.id}</b><span>v=${s.v.toFixed(2)}c</span>`;
+      const head = `${sw}<b>B${s.id}</b>`;
       if (!e || e.z1 > Z_LOST) {
         const why = s.wl.absorbed ? 'fell back into you' : 'gone: 1+z &gt; 10⁷';
         return `<div class="b gone">${head}<span>last message #${s.msg}</span><span>${why}</span></div>`;

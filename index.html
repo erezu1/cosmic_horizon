@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="style.css?v=24">
+<link rel="stylesheet" href="style.css?v=25">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -67,7 +67,6 @@
     <canvas id="spectrum" aria-label="Received wavelengths"></canvas>
     <ul id="legend" class="legend" hidden>
       <li><i style="background:#ffd27a"></i>past light cone</li>
-      <li><i style="background:#ff9a4a"></i>mass shells</li>
       <li><i style="background:#7fd0ff"></i>apparent horizon</li>
       <li><i class="dash"></i>event horizon</li>
       <li><i style="background:#9fb0e0"></i>stars · beacons</li>
@@ -92,8 +91,6 @@
       <input type="range" id="speed" min="-1.6" max="0.4" step="0.01" value="-0.85"></label>
     <label class="field"><span>Mass per launch ΔM <output id="dmVal"></output></span>
       <input type="range" id="dm" min="0" max="0.25" step="0.01" value="0.05"></label>
-    <label class="field"><span>Launch speed v <output id="vVal"></output></span>
-      <input type="range" id="v" min="0.5" max="0.99" step="0.01" value="0.8"></label>
     <label class="field"><span>Your mass at start M₀ <output id="m0Val"></output></span>
       <input type="range" id="m0" min="0" max="0.95" step="0.01" value="0.64"></label>
     <label class="field"><span>Mass you spent on stars <output id="mStarsVal"></output></span>
@@ -129,7 +126,7 @@
     <h3>Colour and redshift</h3>
     <p>Between shells, light moves along $v = u + 2r_*(r)=\text{const}$ with $dr_*/dr = 1/f$. Ray tracing through every shell the light crossed gives the exact redshift</p>
     $$\begin{gathered} 1+z = \frac{d\tau_{\text{you}}}{d\tau_{\text{src}}} = \frac{\sqrt{1-8GM_{\text{now}}}}{\dot u\, f\, D},\\ D=\frac{dv}{du_{\text{arr}}}, \end{gathered}$$
-    <p>where $\dot u$ is the source's $du/d\tau$ at emission, and $D$ picks up a factor $f_{\text{new}}/f_{\text{old}}$ at each shell crossing. Beacons transmit in the UV, tuned so you first receive them at 450 nm. The numbers count messages, one per $0.05\,\ell$ of beacon proper time.</p>
+    <p>where $\dot u$ is the source's $du/d\tau$ at emission, and $D$ picks up a factor $f_{\text{new}}/f_{\text{old}}$ at each shell crossing. At launch the beacons' light reaches you stretched by $\sqrt{(1+v)/(1-v)} \approx 45$, so they transmit in the far UV, tuned so you first receive them at 450 nm. The numbers count messages, sent at a rate that reaches you as one per $0.15\,\ell$ at launch.</p>
 
     <h3>The three circles</h3>
     <ul>
@@ -146,23 +143,23 @@
     <p><b>Now</b> (the default) applies $U\to U e^{-\tau/\ell},\ V\to V e^{\tau/\ell}$, a translation in static time that leaves your worldline and $\mathscr{I}^+$ fixed. The present sits mid-left, and the earlier history is squeezed against the past horizon. Once you have radiated all your mass, the neighbourhood of now is visibly the static patch of empty de Sitter.</p>
 
     <h3>Launching</h3>
-    <p>Each launch radiates $\Delta M$ outward over $0.2\,\ell$ of your time, as 8 thin null shells. This is exact for a ring; a single beacon's mass is spread over a ring (s-wave approximation). Beacons are test particles launched at speed $v$. Brightness is schematic.</p>
-    <p><b>The stars came from you.</b> You started heavier, with mass $M_0 + M_\star$. Before $\tau = 0$ you launched the stars in six bursts, at the same launch speed $v$ as your beacons; like beacons, they transmit bluer light, tuned so you would have seen them in the visible at launch. Each burst cost you $M_\star/6$, radiated as a light flash (the same Vaidya shell as a beacon launch), and the stars themselves are test particles. That is why the game opens with a ring of older, smaller horizons and a visible edge still catching up with $r_c$.</p>
+    <p>Everything you launch leaves at $v = 0.999c$ and carries its share of your mass $\Delta M$. At that speed the mass travels with the object as a thin null shell (the exact Vaidya solution, up to $1-v = 0.1\%$), while the object can still send light back to you. This is exact for a Shell launch; a single beacon's mass is spread over a ring (s-wave approximation). Brightness is schematic.</p>
+    <p><b>The stars came from you.</b> You started heavier, with mass $M_0 + M_\star$. Before $\tau = 0$ you launched the stars in six bursts, at $0.999c$ like your beacons, each burst carrying $M_\star/6$ of your mass. Like beacons, they transmit very blue light, tuned so you would have seen them in the visible at launch. That is why the game opens with a ring of older, smaller horizons and a visible edge still catching up with $r_c$.</p>
 
     <h3>Things to notice</h3>
     <ul>
       <li>Stars recede and redden as $1+z\propto e^{\tau/\ell}$, whatever the mass. The temperature you measure is $1/2\pi\ell$ for any $M$; the mass changes the horizon's size and entropy, not how fast things fade.</li>
       <li>Images pile up at the horizon and never cross it. Each beacon has a last message you will ever receive.</li>
-      <li>Which message is last depends on your future. Launch a beacon, then emit a big $\Delta M$ within about $0.2\ell$. The shell overtakes the beacon while it is still inside the new horizon, so you receive more messages and it freezes farther out. Emit later and nothing changes: you were seeing old light from a beacon that had already left.</li>
-      <li>While you emit, sources outside the shell turn bluer, ramping up over the $0.2\,\ell$ launch to a factor $\sqrt{1-8GM_{\text{old}}}\big/\sqrt{1-8GM_{\text{new}}}$. Their light crosses the shell to reach you, and inside a moving shell clocks run at a different rate: the two cones, with different deficit angles, are glued along the expanding circle. Unlike 3+1, this step does not fade as the shell grows, because 2+1 gravity has no length scale. Each source returns to normal once the shell has passed it. The shell also kicks slow objects inward, so slow stars can fall back to you.</li>
+      <li>Each frozen image sits where that object crossed your event horizon, so it records how big your horizon was then. A beacon launched after you have shed mass freezes farther out than an older one, even though the older one is now much farther away: you are still receiving its very old light.</li>
+      <li>When you launch, sources farther out than the launched mass turn bluer by $\sqrt{1-8GM_{\text{old}}}\big/\sqrt{1-8GM_{\text{new}}}$. Crossing the moving shell acts like a radial boost: the two cones, with different deficit angles, are glued along the expanding circle. Unlike 3+1, this step does not fade as the shell grows, because 2+1 gravity has no length scale. Each source returns to normal once the shell has passed it. The same boost kicks slower objects inward, but nothing launched at $0.999c$ is slow enough to be turned around.</li>
     </ul>
   </section>
 </div>
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="js/physics.js?v=24"></script>
-<script src="js/colors.js?v=24"></script>
-<script src="js/main.js?v=24"></script>
+<script src="js/physics.js?v=25"></script>
+<script src="js/colors.js?v=25"></script>
+<script src="js/main.js?v=25"></script>
 </body>
 </html>
