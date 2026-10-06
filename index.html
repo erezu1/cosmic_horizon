@@ -3,82 +3,157 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#04060c">
+<meta name="theme-color" content="#05070e">
 <title>Cosmic Horizon</title>
 <meta name="description" content="Sit at the centre of de Sitter space with a point mass, launch beacons, and watch them redshift into the cosmological horizon. Exact 2+1 GR (Vaidya–de Sitter).">
-<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
-<header class="top">
-  <h1>Cosmic Horizon</h1>
-  <p class="sub">You sit on a point mass in de Sitter₃. Tap the sky to launch beacons.</p>
-</header>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></symbol>
+  <symbol id="i-ring" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="2.2"/><circle cx="12" cy="12" r="8" stroke-dasharray="2.4 3"/></g></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 2.1-5M5 4.5V8h3.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="i-gauge" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/></g></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 7h11M9 12h11M9 17h11"/><circle cx="5" cy="7" r="1" fill="currentColor"/><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="5" cy="17" r="1" fill="currentColor"/></g></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></g></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r="0.6" fill="currentColor"/></g></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+</svg>
 
-<main id="app">
-  <section id="stage">
-    <div id="skyWrap">
-      <canvas id="sky" aria-label="The sky as you see it"></canvas>
-      <div id="hint">Tap anywhere to launch a beacon</div>
+<div id="shell">
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo" aria-hidden="true"></span>
+      <div>
+        <h1>Cosmic Horizon</h1>
+        <p class="tag">de Sitter₃ with a point mass</p>
+      </div>
     </div>
+    <nav class="actions">
+      <button class="icon" id="hudBtn" aria-pressed="false" title="Readouts" aria-label="Show readouts"><svg><use href="#i-gauge"/></svg></button>
+      <button class="icon" data-sheet="beaconSheet" title="Beacons" aria-label="Beacons"><svg><use href="#i-list"/></svg></button>
+      <button class="icon" data-sheet="controlSheet" title="Settings" aria-label="Settings"><svg><use href="#i-sliders"/></svg></button>
+      <button class="icon q" data-sheet="aboutSheet" title="What am I looking at?" aria-label="What am I looking at?">?</button>
+    </nav>
+  </header>
+
+  <main id="stage">
+    <div id="view">
+      <canvas id="sky" aria-label="The sky as you see it"></canvas>
+      <canvas id="penrose" aria-label="Penrose diagram" hidden></canvas>
+
+      <div id="hud" class="glass" hidden>
+        <div><span class="k">τ</span><span class="v" id="hTau"></span><span class="u">ℓ · your clock</span></div>
+        <div><span class="k">M</span><span class="v" id="hM"></span><span class="u">/8G</span></div>
+        <div><span class="k">r꜀</span><span class="v" id="hRc"></span><span class="u">ℓ</span></div>
+        <div><span class="k">edge</span><span class="v" id="hEdge"></span><span class="u">ℓ · visible</span></div>
+        <div><span class="k">deficit</span><span class="v" id="hDef"></span><span class="u"></span></div>
+        <div><span class="k">S/S<sub>dS</sub></span><span class="v" id="hS"></span><span class="u"></span></div>
+      </div>
+
+      <div id="penZoom" class="chips glass" hidden>
+        <button id="pFull" aria-pressed="true">Full history</button>
+        <button id="pNow" aria-pressed="false">Centre on now</button>
+      </div>
+
+      <div id="hint" class="glass">Tap the sky to launch a beacon</div>
+    </div>
+
     <canvas id="spectrum" aria-label="Received wavelengths"></canvas>
-    <div class="bar">
-      <button id="play" type="button">Pause</button>
-      <button id="ring" type="button" aria-pressed="false">Ring ×12</button>
-      <button id="reset" type="button">Reset</button>
+    <ul id="legend" class="legend" hidden>
+      <li><i style="background:#ffd27a"></i>past light cone</li>
+      <li><i style="background:#ff9a4a"></i>mass shells</li>
+      <li><i style="background:#7fd0ff"></i>apparent horizon</li>
+      <li><i class="dash"></i>event horizon</li>
+      <li><i style="background:#9fb0e0"></i>stars · beacons</li>
+      <li><i class="dash" style="opacity:.6"></i>predicted future (if you emit nothing more)</li>
+    </ul>
+
+    <div class="toolbar glass">
+      <button class="tool" id="play" aria-label="Pause"><svg><use href="#i-pause"/></svg></button>
+      <button class="tool" id="ring" aria-pressed="false" aria-label="Ring of 12"><svg><use href="#i-ring"/></svg><span>×12</span></button>
+      <button class="tool" id="reset" aria-label="Reset"><svg><use href="#i-reset"/></svg></button>
+      <div class="seg" role="tablist" aria-label="View">
+        <button role="tab" id="vSky" aria-selected="true">Sky</button>
+        <button role="tab" id="vPen" aria-selected="false">Penrose</button>
+      </div>
+    </div>
+  </main>
+
+  <section class="sheet glass" id="controlSheet" hidden>
+    <header><h2>Settings</h2><button class="icon sm" data-close aria-label="Close"><svg><use href="#i-close"/></svg></button></header>
+    <label class="field"><span>Time speed <output id="speedVal"></output></span>
+      <input type="range" id="speed" min="-1.6" max="0.4" step="0.01" value="-0.85"></label>
+    <label class="field"><span>Mass per launch ΔM <output id="dmVal"></output></span>
+      <input type="range" id="dm" min="0" max="0.25" step="0.01" value="0.05"></label>
+    <label class="field"><span>Beacon speed v <output id="vVal"></output></span>
+      <input type="range" id="v" min="0.5" max="0.99" step="0.01" value="0.8"></label>
+    <label class="field"><span>Starting mass M₀ <output id="m0Val"></output></span>
+      <input type="range" id="m0" min="0" max="0.95" step="0.01" value="0.64"></label>
+    <div class="switches">
+      <label class="switch"><input type="checkbox" id="ir"><span></span>Infrared camera</label>
+      <label class="switch"><input type="checkbox" id="waves" checked><span></span>Wave glyphs</label>
+      <label class="switch"><input type="checkbox" id="oldH" checked><span></span>Old horizons</label>
+      <label class="switch"><input type="checkbox" id="stars" checked><span></span>Stars</label>
     </div>
   </section>
 
-  <aside id="side">
-    <div class="card">
-      <h2>Penrose diagram</h2>
-      <canvas id="penrose" aria-label="Penrose diagram"></canvas>
-      <ul class="legend">
-        <li><i style="background:#ffd27a"></i>your past light cone (what you see now)</li>
-        <li><i style="background:#ff9a4a"></i>emitted mass shells</li>
-        <li><i style="background:#7fd0ff"></i>apparent horizon r = r<sub>c</sub>(m)</li>
-        <li><i class="dash"></i>event horizon (if you emit nothing more)</li>
-        <li><i style="background:#9fb0e0"></i>stars · coloured lines: beacons · dashed: future</li>
-      </ul>
-    </div>
+  <section class="sheet glass" id="beaconSheet" hidden>
+    <header><h2>Beacons</h2><button class="icon sm" data-close aria-label="Close"><svg><use href="#i-close"/></svg></button></header>
+    <div id="beacons"></div>
+  </section>
 
-    <div class="card controls">
-      <h2>Controls</h2>
-      <label><span>Time speed <output id="speedVal"></output></span>
-        <input type="range" id="speed" min="-1.6" max="0.4" step="0.01" value="-0.85"></label>
-      <label><span>Mass per launch ΔM <output id="dmVal"></output></span>
-        <input type="range" id="dm" min="0" max="0.25" step="0.01" value="0.05"></label>
-      <label><span>Beacon speed v <output id="vVal"></output></span>
-        <input type="range" id="v" min="0.5" max="0.99" step="0.01" value="0.8"></label>
-      <label><span>Starting mass M₀ <output id="m0Val"></output></span>
-        <input type="range" id="m0" min="0" max="0.95" step="0.01" value="0.64"></label>
-      <div class="toggles">
-        <label class="tog"><input type="checkbox" id="ir"> Infrared camera</label>
-        <label class="tog"><input type="checkbox" id="waves" checked> Wave glyphs</label>
-        <label class="tog"><input type="checkbox" id="oldH" checked> Old horizons</label>
-        <label class="tog"><input type="checkbox" id="stars" checked> Stars</label>
-      </div>
-    </div>
+  <section class="sheet glass notes" id="aboutSheet" hidden>
+    <header><h2>What am I looking at?</h2><button class="icon sm" data-close aria-label="Close"><svg><use href="#i-close"/></svg></button></header>
 
-    <div class="card">
-      <h2>Beacons</h2>
-      <div id="beacons"></div>
-    </div>
+    <h3>The spacetime</h3>
+    <p>You sit on a point mass $M$ in 2+1 dimensional de Sitter space. As you radiate mass outward, the geometry is the outgoing Vaidya–de Sitter solution, which is exact:</p>
+    $$\begin{gathered} ds^2 = -f\,du^2 - 2\,du\,dr + r^2 d\phi^2,\\ f(u,r) = 1 - 8GM(u) - \frac{r^2}{\ell^2}. \end{gathered}$$
+    <p>Here $u$ is retarded time and $r$ is the areal radius (circumference$/2\pi$). In three dimensions a point mass makes no black hole. It makes a cone with deficit angle $2\pi\bigl(1-\sqrt{1-8GM}\bigr)$, and your cosmological horizon sits at</p>
+    $$r_c = \ell\sqrt{1-8GM},\qquad \frac{S}{S_{\mathrm{dS}}} = \frac{r_c}{\ell}.$$
 
-    <div class="card notes">
-      <h2>What you are looking at</h2>
-      <p>Spacetime is 2+1 de Sitter with a point mass at your position, which is exact: <em>ds² = −f du² − 2du dr + r²dφ²</em> with <em>f = 1 − 8GM(u) − r²/ℓ²</em>. The mass is a conical defect, and the horizon sits at <em>r<sub>c</sub> = ℓ√(1−8GM)</em>.</p>
-      <p><b>Units.</b> Lengths and times are in units of the de Sitter radius ℓ (c = 1). In 2+1 dimensions Newton's constant has units of 1/mass, so masses are given in units of 1/8G. The maximum is M = 1/8G: the deficit angle reaches 2π and the horizon shrinks to zero. M = 0 is empty de Sitter with r<sub>c</sub> = ℓ.</p>
-      <p><b>Horizon.</b> The dashed circle is r<sub>c</sub> for your mass now, and it jumps the moment you emit. The solid circle is the edge of what you can actually see, the outermost point of your past light cone. It catches up over about ℓ, as light from the newly enclosed region reaches you.</p>
-      <p><b>Sky.</b> Every object is drawn where it was when it emitted the light reaching you <em>now</em>, i.e. on your past light cone. Radius is areal (circumference/2π).</p>
-      <p><b>Colour.</b> The received wavelength comes from exact ray tracing through the time-dependent metric: every shell the light crossed on its way in, plus the source's motion. Beacons transmit in the UV, tuned so you first receive them at 450 nm. Numbers count messages, one per 0.05ℓ of beacon proper time.</p>
-      <p><b>Launching.</b> Each launch radiates ΔM as an outgoing null shell (Vaidya). This is exact for a ring; a single beacon's mass is spread over a ring (s-wave approximation). Stars and beacons are test particles. Brightness is schematic.</p>
-      <p><b>Things to notice.</b> Stars recede and redden by a factor e per ℓ of your time, whatever the mass. Emitting mass enlarges the horizon's circumference (its entropy). Images pile up at the horizon and never cross it, and each beacon has a last message you will ever receive. Which message is last depends on your future: launch a beacon, then emit a big ΔM within about 0.2ℓ. The shell overtakes the beacon while it is still inside the new, larger horizon, so you receive more messages and it freezes farther out. Emit later and it is too late: what you see is old light from a beacon that has already left. Just after you emit, sources outside the shell look bluer by √(1−8GM<sub>old</sub>)/√(1−8GM<sub>new</sub>), because their light gains energy crossing the shell.</p>
-    </div>
-  </aside>
-</main>
+    <h3>Units</h3>
+    <p>Lengths and times are in units of $\ell$, with $c=1$. In 2+1 dimensions $G$ has units of 1/mass, so masses are given in units of $1/8G$. The maximum mass is $M = 1/8G$: the deficit reaches $2\pi$ and the horizon shrinks to zero. $M=0$ is empty de Sitter, with $r_c=\ell$.</p>
 
-<script src="js/physics.js"></script>
-<script src="js/colors.js"></script>
-<script src="js/main.js"></script>
+    <h3>The sky</h3>
+    <p>Every object is drawn where it was when it emitted the light reaching you <em>now</em>, i.e. on your past light cone, at its areal radius.</p>
+
+    <h3>Colour and redshift</h3>
+    <p>Between shells, light moves along $v = u + 2r_*(r)=\text{const}$ with $dr_*/dr = 1/f$. Ray tracing through every shell the light crossed gives the exact redshift</p>
+    $$\begin{gathered} 1+z = \frac{d\tau_{\text{you}}}{d\tau_{\text{src}}} = \frac{\sqrt{1-8GM_{\text{now}}}}{\dot u\, f\, D},\\ D=\frac{dv}{du_{\text{arr}}}, \end{gathered}$$
+    <p>where $\dot u$ is the source's $du/d\tau$ at emission, and $D$ picks up a factor $f_{\text{new}}/f_{\text{old}}$ at each shell crossing. Beacons transmit in the UV, tuned so you first receive them at 450 nm. The numbers count messages, one per $0.05\,\ell$ of beacon proper time.</p>
+
+    <h3>The horizon</h3>
+    <p>The dashed circle is $r_c$ for your mass now, and it jumps the moment you emit. The solid circle is the edge of what you can actually see, the outermost point of your past light cone. After an emission at time $\tau_e$ it catches up as light from the newly enclosed region reaches you:</p>
+    $$\begin{gathered} r_{\text{edge}} = \max\!\Bigl(r_c^{\text{old}},\; r_c^{\text{new}}\tanh\tfrac{\tau-\tau_e}{2\ell}\Bigr). \end{gathered}$$
+
+    <h3>The Penrose diagram</h3>
+    <p>The diagram uses null coordinates $U = e^{\tau_{\text{out}}/\ell}$ and $V = \mp e^{-\tau_{\text{in}}/\ell}$, where $\tau_{\text{out}}$ ($\tau_{\text{in}}$) is your clock reading when the outgoing (ingoing) light ray through a point leaves (reaches) you, compactified with $\arctan$. Light always moves at 45°. Your worldline is $UV=-1$, $\mathscr{I}^+$ is $UV=1$, and the event horizon is $V=0$.</p>
+    <p>Solid worldlines are already determined: they lie inside your current future light cone's past, $u \le u_{\text{now}}$. Dashed continuations are predictions that assume you emit nothing more. A later shell will bend them.</p>
+    <p><b>Centre on now</b> applies $U\to U e^{-\tau/\ell},\ V\to V e^{\tau/\ell}$, a translation in static time that leaves your worldline and $\mathscr{I}^+$ fixed. The present sits mid-left, and the earlier history is squeezed against the past horizon. Once you have radiated all your mass, the neighbourhood of now is visibly the static patch of empty de Sitter.</p>
+
+    <h3>Launching</h3>
+    <p>Each launch radiates $\Delta M$ as an outgoing null shell. This is exact for a ring; a single beacon's mass is spread over a ring (s-wave approximation). Stars and beacons are test particles: stars follow the Hubble flow, $\dot r = r/\ell$, and beacons are launched at speed $v$. Brightness is schematic.</p>
+
+    <h3>Things to notice</h3>
+    <ul>
+      <li>Stars recede and redden as $1+z\propto e^{\tau/\ell}$, whatever the mass. The temperature you measure is $1/2\pi\ell$ for any $M$; the mass changes the horizon's size and entropy, not how fast things fade.</li>
+      <li>Images pile up at the horizon and never cross it. Each beacon has a last message you will ever receive.</li>
+      <li>Which message is last depends on your future. Launch a beacon, then emit a big $\Delta M$ within about $0.2\ell$. The shell overtakes the beacon while it is still inside the new horizon, so you receive more messages and it freezes farther out. Emit later and nothing changes: you were seeing old light from a beacon that had already left.</li>
+      <li>Just after you emit, sources outside the shell look bluer by $\sqrt{1-8GM_{\text{old}}}\big/\sqrt{1-8GM_{\text{new}}}$, because their light gains energy crossing the shell.</li>
+    </ul>
+  </section>
+</div>
+
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<script src="js/physics.js?v=5"></script>
+<script src="js/colors.js?v=5"></script>
+<script src="js/main.js?v=5"></script>
 </body>
 </html>
