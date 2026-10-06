@@ -158,7 +158,7 @@
     circle(c, cx, cy, R); c.stroke();
     c.setLineDash([]);
     c.fillStyle = 'rgba(255,255,255,0.32)';
-    c.font = '11px Inter, system-ui, sans-serif';
+    c.font = '13px Inter, system-ui, sans-serif';
     c.textAlign = 'center';
     c.fillText('r = ℓ  (empty dS)', cx, cy + R + 15 < h - 4 ? cy + R + 15 : cy + R - 7);
     c.textAlign = 'center';
@@ -295,7 +295,7 @@
 
     if (labelsOn) {                 // names only while the beacon list is open
       c.fillStyle = `rgba(230,236,255,${0.45 + 0.4 * Math.min(1, al)})`;
-      c.font = '10px Inter, system-ui, sans-serif';
+      c.font = '12px Inter, system-ui, sans-serif';
       c.textAlign = 'left';
       c.fillText(`B${s.id} #${Math.floor(e.tau / MSG_PERIOD)}`, x + 7, y - 6);
     }
@@ -327,7 +327,7 @@
       c.fillStyle = g; c.fillRect(X(380), top, X(750) - X(380), bot - top);
     }
 
-    c.font = '10px system-ui, sans-serif';
+    c.font = '11.5px Inter, system-ui, sans-serif';
     c.textAlign = 'center';
     c.fillStyle = 'rgba(200,210,240,0.75)';
     const lbl = [['UV', 200], ['vis', 530], ['infrared', 2.5e4], ['microwave', 3e7], ['radio', 3e9]];
@@ -358,7 +358,7 @@
   // ---------- Penrose diagram ----------
   function penGeom() {
     const w = pen.clientWidth, h = pen.clientHeight;
-    const pad = 16;
+    const pad = 26;
     return { cx: w / 2, cy: h / 2, s: (Math.min(w, h) / 2 - pad) / HALF };
   }
   function toXY(g, P, Q) { return [g.cx + (Q - P) * g.s, g.cy - (P + Q) * g.s]; }
@@ -554,16 +554,16 @@
     c.restore();
     { const [x, y] = toXY(g, Pn, Qn); c.fillStyle = '#ffd27a'; circle(c, x, y, 4); c.fill(); }
 
-    c.font = '11px Inter, system-ui, sans-serif';
+    c.font = '13px Inter, system-ui, sans-serif';
     c.fillStyle = 'rgba(200,210,240,0.85)';
     c.textAlign = 'center';
-    c.fillText('I⁺', g.cx, g.cy - HALF * g.s - 5);
+    c.fillText('I⁺', g.cx, g.cy - HALF * g.s - 7);
     c.save();
-    c.translate(g.cx - HALF * g.s - 6, g.cy); c.rotate(-HALF);
+    c.translate(g.cx - HALF * g.s - 8, g.cy); c.rotate(-HALF);
     c.fillText('you (r = 0)', 0, 0);
     c.restore();
     c.save();
-    c.translate(g.cx + HALF * g.s + 12, g.cy); c.rotate(HALF);
+    c.translate(g.cx + HALF * g.s + 8, g.cy); c.rotate(HALF);
     c.fillText('antipode', 0, 0);
     c.restore();
     if (penMode === 'now') {
@@ -672,15 +672,23 @@
 
   const sheetBtns = [...document.querySelectorAll('[data-sheet]')];
   function closeSheets() {
-    for (const b of sheetBtns) { $(b.dataset.sheet).hidden = true; b.setAttribute('aria-expanded', 'false'); }
+    for (const b of sheetBtns) {
+      const el = $(b.dataset.sheet);
+      b.setAttribute('aria-expanded', 'false');
+      if (el.hidden || el.classList.contains('closing')) continue;
+      el.classList.add('closing');
+      el._t = setTimeout(() => { el.hidden = true; el.classList.remove('closing'); }, 180);
+    }
   }
   for (const b of sheetBtns) {
     b.setAttribute('aria-expanded', 'false');
     b.addEventListener('click', ev => {
       ev.stopPropagation();
-      const el = $(b.dataset.sheet), open = el.hidden;
+      const el = $(b.dataset.sheet), open = el.hidden || el.classList.contains('closing');
       closeSheets();
       if (open) {
+        clearTimeout(el._t);
+        el.classList.remove('closing');
         el.hidden = false; b.setAttribute('aria-expanded', 'true');
         if (b.dataset.sheet === 'beaconSheet') updateList();
         if (b.dataset.sheet === 'aboutSheet') renderMath(el);
