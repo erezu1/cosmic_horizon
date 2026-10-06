@@ -621,7 +621,11 @@
     $('play').setAttribute('aria-label', p ? 'Pause' : 'Play');
   }
   $('play').addEventListener('click', () => setPlaying(!S.playing));
-  $('ring').addEventListener('click', () => { S.ring = !S.ring; $('ring').setAttribute('aria-pressed', String(S.ring)); });
+  $('ring').addEventListener('click', () => {
+    S.ring = !S.ring;
+    $('ring').setAttribute('aria-pressed', String(S.ring));
+    $('hint').textContent = S.ring ? 'Tap the sky to emit a shell of 12 beacons' : 'Tap the sky to launch a beacon';
+  });
   $('reset').addEventListener('click', () => { reset(); $('hint').classList.remove('hidden'); });
 
   let view = 'sky';
@@ -634,18 +638,24 @@
   }
   $('pFull').addEventListener('click', () => setPenMode('full'));
   $('pNow').addEventListener('click', () => setPenMode('now'));
+  const wideMQ = window.matchMedia('(min-width: 1000px)');
   function setView(v) {
+    if (v === 'both' && !wideMQ.matches) v = 'sky';
     view = v;
-    const isSky = v === 'sky';
-    $('vSky').setAttribute('aria-selected', String(isSky));
-    $('vPen').setAttribute('aria-selected', String(!isSky));
-    sky.hidden = !isSky; pen.hidden = isSky;
-    spec.hidden = !isSky; $('legend').hidden = isSky;
-    $('hint').style.display = isSky ? '' : 'none';
-    $('penZoom').hidden = isSky;
+    const showSky = v !== 'penrose', showPen = v !== 'sky';
+    $('vSky').setAttribute('aria-selected', String(v === 'sky'));
+    $('vBoth').setAttribute('aria-selected', String(v === 'both'));
+    $('vPen').setAttribute('aria-selected', String(v === 'penrose'));
+    $('view').classList.toggle('both', v === 'both');
+    sky.hidden = !showSky; pen.hidden = !showPen;
+    spec.hidden = !showSky; $('legend').hidden = !showPen;
+    $('hint').style.display = showSky ? '' : 'none';
+    $('penZoom').hidden = !showPen;
     store.set('view', v);
   }
   $('vSky').addEventListener('click', () => setView('sky'));
+  $('vBoth').addEventListener('click', () => setView('both'));
+  wideMQ.addEventListener('change', () => { if (view === 'both' && !wideMQ.matches) setView('sky'); });
   $('vPen').addEventListener('click', () => setView('penrose'));
 
   function setHUD(on) {
@@ -697,8 +707,8 @@
     last = now;
     if (S.playing) S.tau += ui.speed * dt;
     step();
-    if (view === 'sky') { drawSky(now); drawSpectrum(); }
-    else drawPenrose();
+    if (view !== 'penrose') { drawSky(now); drawSpectrum(); }
+    if (view !== 'sky') drawPenrose();
     if (S.frame % 6 === 0) updateHUD();
     if (S.frame % 10 === 0 && !$('beaconSheet').hidden) updateList();
     S.frame++;
@@ -706,7 +716,7 @@
   }
 
   reset();
-  setView(store.get('view') === 'penrose' ? 'penrose' : 'sky');
+  { const v = store.get('view'); setView(v === 'penrose' || v === 'sky' || v === 'both' ? v : (wideMQ.matches ? 'both' : 'sky')); }
   setHUD(store.get('hud') === '1');
   setPenMode(penMode);
   window.cosmicHorizon = { state: () => S, fire: (phi, ring) => fire(phi, !!ring) };
