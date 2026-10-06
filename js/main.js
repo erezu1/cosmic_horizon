@@ -29,7 +29,7 @@
     ui.stars = $('stars').checked;
     $('speedVal').textContent = ui.speed.toFixed(2) + ' ℓ/s';
     $('dmVal').textContent = ui.dm.toFixed(2) + ' /8G';
-    $('vVal').textContent = ui.v.toFixed(2) + 'c';
+    $('vVal').textContent = ui.v.toFixed(2) + 'c' + (S && Math.abs(ui.v - S.vStars) > 1e-9 ? ' · stars on reset' : '');
     const pending = S && (Math.abs(ui.m0 - S.m0) > 1e-9 || Math.abs(ui.mStars - S.mStars) > 1e-9);
     $('m0Val').textContent = ui.m0.toFixed(2) + ' /8G' + (pending ? ' · on reset' : '');
     $('mStarsVal').textContent = ui.mStars.toFixed(2) + ' /8G' + (pending ? ' · on reset' : '');
@@ -53,8 +53,6 @@
   // Before τ = 0 you launched the stars in bursts. Each burst cost you a slice of mass,
   // radiated outward as a flash of light (an exact Vaidya shell); the stars are test particles.
   const STAR_BURSTS = [-3.4, -2.6, -1.9, -1.3, -0.8, -0.4];   // your proper time (ℓ)
-  const STAR_V = [0.05, 0.45];                                // launch speeds
-
   function reset() {
     readUI();
     const mStars = Math.min(ui.mStars, Math.max(0, 0.96 - ui.m0));
@@ -63,25 +61,30 @@
     const sources = [];
     const oldHorizons = [];
     const perBurst = Math.round(N_STARS / STAR_BURSTS.length);
+    // Stars leave at the same launch speed as beacons and, like beacons, transmit bluer
+    // light, tuned so that at launch you would receive them in the visible.
+    const v = ui.v, g = 1 / Math.sqrt(1 - v * v), dop = Math.sqrt((1 + v) / (1 - v));
     for (const tb of STAR_BURSTS) {
-      const u = st.uOfTau(tb);
       oldHorizons.push(st.aNow);
-      if (mStars > 0) st.addShell(u, mStars / STAR_BURSTS.length);
-      const a = st.aR[st.region(u)];
       const off = rnd() * TAU;
-      for (let j = 0; j < perBurst; j++) {
-        const v = STAR_V[0] + (STAR_V[1] - STAR_V[0]) * rnd();
-        const g = 1 / Math.sqrt(1 - v * v);
-        sources.push({
-          kind: 'star', phi: off + TAU * (j + 0.8 * (rnd() - 0.5)) / perBurst,
-          wl: new Worldline(u, 0, g * (1 - v) / a, 0),
-          lamEm: 395 + 80 * rnd(), size: 0.9 + 1.5 * rnd() * rnd(), jit: rnd(), rot: 0.25 * (rnd() - 0.5),
-          hint: 1e9, obs: null, pq: newPQ(), tail: null,
-        });
+      // Like a beacon launch: the burst's mass leaves as thin shells over BURST_TIME,
+      // and its stars are launched across the same window.
+      for (let k = 0; k < BURST_STEPS; k++) {
+        const u = st.uOfTau(tb + BURST_TIME * k / BURST_STEPS);
+        if (mStars > 0) st.addShell(u, mStars / STAR_BURSTS.length / BURST_STEPS);
+        const a = st.aR[st.region(u)];
+        for (let j = k; j < perBurst; j += BURST_STEPS) {
+          sources.push({
+            kind: 'star', phi: off + TAU * (j + 0.8 * (rnd() - 0.5)) / perBurst,
+            wl: new Worldline(u, 0, g * (1 - v) / a, 0),
+            lamEm: (380 + 110 * rnd()) / dop, size: 0.9 + 1.5 * rnd() * rnd(), jit: rnd(), rot: 0.25 * (rnd() - 0.5),
+            hint: 1e9, obs: null, pq: newPQ(), tail: null,
+          });
+        }
       }
     }
     const playing = S ? S.playing : true;
-    S = { st, sources, tau: 0, u: 0, playing, m0: ui.m0, mStars: ui.mStars, nBeacons: 0, flashes: [], frame: 0, cone: null,
+    S = { st, sources, tau: 0, u: 0, playing, m0: ui.m0, mStars: ui.mStars, vStars: ui.v, nBeacons: 0, flashes: [], frame: 0, cone: null,
           pending: [], oldHorizons,
           ring: S ? S.ring : false, pen: { ver: -1 }, tailFrame: -1 };
     readUI();
