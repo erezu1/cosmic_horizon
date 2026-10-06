@@ -173,6 +173,17 @@ const DS = (function () {
     return s[lo];
   }
 
+  // Outermost areal radius on the past light cone: the edge of the sky you can see now.
+  // (r is monotone along each segment; the far end of the oldest segment tends to r_c,0.)
+  function coneMaxR(cone) {
+    let best = 0;
+    for (const sg of cone.segs) {
+      const rLo = sg.uLo === -Infinity ? sg.a : rOf((sg.v - sg.uLo) / 2, sg.a, sg.side);
+      best = Math.max(best, rLo);
+    }
+    return best;
+  }
+
   function coneR(cone, u) {
     const sg = coneSeg(cone, u);
     return rOf((sg.v - u) / 2, sg.a, sg.side);
@@ -343,7 +354,7 @@ const DS = (function () {
 
   return {
     IN, OUT, rstar, rOf, fOf, drdu, rk4,
-    Spacetime, Worldline, coneR, coneSeg, tailOf, makeHubbleStar, findEmission, R_STOP,
+    Spacetime, Worldline, coneR, coneMaxR, coneSeg, tailOf, makeHubbleStar, findEmission, R_STOP,
   };
 })();
 

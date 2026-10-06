@@ -25,9 +25,9 @@
     ui.oldH = $('oldH').checked;
     ui.stars = $('stars').checked;
     $('speedVal').textContent = ui.speed.toFixed(2) + ' ℓ/s';
-    $('dmVal').textContent = ui.dm.toFixed(2);
+    $('dmVal').textContent = ui.dm.toFixed(2) + ' /8G';
     $('vVal').textContent = ui.v.toFixed(2) + 'c';
-    $('m0Val').textContent = ui.m0.toFixed(2) + (S && Math.abs(ui.m0 - S.st.m0) > 1e-9 ? ' (on reset)' : '');
+    $('m0Val').textContent = ui.m0.toFixed(2) + ' /8G' + (S && Math.abs(ui.m0 - S.st.m0) > 1e-9 ? ' (on reset)' : '');
   }
   for (const id of ['speed', 'dm', 'v', 'm0', 'ir', 'waves', 'oldH', 'stars']) $(id).addEventListener('input', readUI);
 
@@ -138,11 +138,16 @@
     c.fillStyle = '#04060c';
     c.fillRect(0, 0, w, h);
 
-    // Inside the horizon: faint glow, so the observable region reads as a disc.
-    const g0 = c.createRadialGradient(cx, cy, 0, cx, cy, aNow * R);
+    // Edge of what you can see now: the outermost point of your past light cone.
+    // After an emission it grows from the old r_c towards the new one as light from the
+    // newly enclosed region arrives (over ~ℓ), while r_c(M_now) itself jumps at once.
+    const rEdge = DS.coneMaxR(S.cone);
+
+    // Inside the visible edge: faint glow, so the observable region reads as a disc.
+    const g0 = c.createRadialGradient(cx, cy, 0, cx, cy, rEdge * R);
     g0.addColorStop(0, 'rgba(30,40,80,0.35)');
     g0.addColorStop(1, 'rgba(20,28,60,0.10)');
-    c.fillStyle = g0; circle(c, cx, cy, aNow * R); c.fill();
+    c.fillStyle = g0; circle(c, cx, cy, rEdge * R); c.fill();
 
     // Reference circles in areal radius.
     c.lineWidth = 1;
@@ -154,9 +159,8 @@
     c.setLineDash([]);
     c.fillStyle = 'rgba(255,255,255,0.32)';
     c.font = '11px system-ui, sans-serif';
-    c.textAlign = 'center';
     c.textAlign = 'left';
-    c.fillText('r = ℓ  (pure dS)', cx + 0.72 * R, cy - 0.72 * R);
+    c.fillText('r = ℓ  (empty dS)', cx + 0.72 * R, cy - 0.72 * R);
     c.textAlign = 'center';
 
     // Earlier horizons.
@@ -167,18 +171,34 @@
       c.setLineDash([]);
     }
 
-    // The horizon now.
+    // Horizon set by your mass now (jumps when you emit).
     const rh = aNow * R;
-    const gh = c.createRadialGradient(cx, cy, Math.max(0, rh - 14), cx, cy, rh + 16);
+    const catching = aNow - rEdge > 2e-4;
+    if (catching) {
+      c.setLineDash([5, 4]);
+      c.strokeStyle = 'rgba(160,215,255,0.7)';
+      c.lineWidth = 1.2;
+      circle(c, cx, cy, rh); c.stroke();
+      c.setLineDash([]);
+    }
+
+    // The visible horizon (solid).
+    const re = rEdge * R;
+    const gh = c.createRadialGradient(cx, cy, Math.max(0, re - 14), cx, cy, re + 16);
     gh.addColorStop(0, 'rgba(127,208,255,0)');
     gh.addColorStop(0.47, 'rgba(127,208,255,0.30)');
     gh.addColorStop(1, 'rgba(127,208,255,0)');
-    c.fillStyle = gh; circle(c, cx, cy, rh + 16); c.fill();
+    c.fillStyle = gh; circle(c, cx, cy, re + 16); c.fill();
     c.strokeStyle = 'rgba(160,215,255,0.95)';
     c.lineWidth = 1.6;
-    circle(c, cx, cy, rh); c.stroke();
+    circle(c, cx, cy, re); c.stroke();
     c.fillStyle = 'rgba(160,215,255,0.95)';
-    c.fillText(`horizon  r꜀ = ${aNow.toFixed(3)} ℓ`, cx, cy - rh - 8 < 12 ? cy - rh + 16 : cy - rh - 8);
+    const ly = cy - rh - 8 < 12 ? cy - rh + 16 : cy - rh - 8;
+    c.fillText(`horizon  r꜀ = ${aNow.toFixed(3)} ℓ`, cx, ly);
+    if (catching) {
+      c.fillStyle = 'rgba(160,215,255,0.75)';
+      c.fillText(`visible edge ${rEdge.toFixed(3)} ℓ (catching up)`, cx, cy + rh + 16 > h - 4 ? cy + rh - 10 : cy + rh + 16);
+    }
 
     // Sources.
     const t = now / 1000;
@@ -284,7 +304,7 @@
     c.textAlign = 'left';
     const lines = [
       [`τ = ${S.tau.toFixed(2)} ℓ`, 'your proper time'],
-      [`8GM = ${m.toFixed(3)}`, m === 0 ? 'pure de Sitter' : `deficit ${(360 * (1 - a)).toFixed(0)}°`],
+      [`M = ${m.toFixed(3)} /8G`, m === 0 ? 'empty de Sitter' : `deficit ${(360 * (1 - a)).toFixed(0)}°`],
       [`r꜀ = ${a.toFixed(3)} ℓ`, `S/S_dS = ${a.toFixed(3)}`],
     ];
     let y = 18;

@@ -45,11 +45,11 @@
       <h2>Controls</h2>
       <label><span>Time speed <output id="speedVal"></output></span>
         <input type="range" id="speed" min="-1.6" max="0.4" step="0.01" value="-0.85"></label>
-      <label><span>Mass per launch Δm <output id="dmVal"></output></span>
+      <label><span>Mass per launch ΔM <output id="dmVal"></output></span>
         <input type="range" id="dm" min="0" max="0.25" step="0.01" value="0.05"></label>
       <label><span>Beacon speed v <output id="vVal"></output></span>
         <input type="range" id="v" min="0.5" max="0.99" step="0.01" value="0.8"></label>
-      <label><span>Starting mass m₀ = 8GM <output id="m0Val"></output></span>
+      <label><span>Starting mass M₀ <output id="m0Val"></output></span>
         <input type="range" id="m0" min="0" max="0.95" step="0.01" value="0.64"></label>
       <div class="toggles">
         <label class="tog"><input type="checkbox" id="ir"> Infrared camera</label>
@@ -67,10 +67,12 @@
     <div class="card notes">
       <h2>What you are looking at</h2>
       <p>Spacetime is 2+1 de Sitter with a point mass at your position, which is exact: <em>ds² = −f du² − 2du dr + r²dφ²</em> with <em>f = 1 − 8GM(u) − r²/ℓ²</em>. The mass is a conical defect, and the horizon sits at <em>r<sub>c</sub> = ℓ√(1−8GM)</em>.</p>
+      <p><b>Units.</b> Lengths and times are in units of the de Sitter radius ℓ (c = 1). In 2+1 dimensions Newton's constant has units of 1/mass, so masses are given in units of 1/8G. The maximum is M = 1/8G: the deficit angle reaches 2π and the horizon shrinks to zero. M = 0 is empty de Sitter with r<sub>c</sub> = ℓ.</p>
+      <p><b>Horizon.</b> The dashed circle is r<sub>c</sub> for your mass now, and it jumps the moment you emit. The solid circle is the edge of what you can actually see, the outermost point of your past light cone. It catches up over about ℓ, as light from the newly enclosed region reaches you.</p>
       <p><b>Sky.</b> Every object is drawn where it was when it emitted the light reaching you <em>now</em>, i.e. on your past light cone. Radius is areal (circumference/2π).</p>
       <p><b>Colour.</b> The received wavelength comes from exact ray tracing through the time-dependent metric: every shell the light crossed on its way in, plus the source's motion. Beacons transmit in the UV, tuned so you first receive them at 450 nm. Numbers count messages, one per 0.05ℓ of beacon proper time.</p>
-      <p><b>Launching.</b> Each launch radiates Δm as an outgoing null shell (Vaidya). This is exact for a ring; a single beacon's mass is spread over a ring (s-wave approximation). Stars and beacons are test particles. Brightness is schematic.</p>
-      <p><b>Things to notice.</b> Stars recede and redden by a factor e per ℓ of your time, whatever the mass. Emitting mass enlarges the horizon's circumference (its entropy). Images pile up at the horizon and never cross it, and each beacon has a last message you will ever receive. Which message is last depends on your future: launch a beacon, then emit a big Δm within about 0.2ℓ. The shell overtakes the beacon while it is still inside the new, larger horizon, so you receive more messages and it freezes farther out. Emit later and it is too late: what you see is old light from a beacon that has already left. Just after you emit, sources outside the shell look bluer by √(1−8GM<sub>old</sub>)/√(1−8GM<sub>new</sub>), because their light gains energy crossing the shell.</p>
+      <p><b>Launching.</b> Each launch radiates ΔM as an outgoing null shell (Vaidya). This is exact for a ring; a single beacon's mass is spread over a ring (s-wave approximation). Stars and beacons are test particles. Brightness is schematic.</p>
+      <p><b>Things to notice.</b> Stars recede and redden by a factor e per ℓ of your time, whatever the mass. Emitting mass enlarges the horizon's circumference (its entropy). Images pile up at the horizon and never cross it, and each beacon has a last message you will ever receive. Which message is last depends on your future: launch a beacon, then emit a big ΔM within about 0.2ℓ. The shell overtakes the beacon while it is still inside the new, larger horizon, so you receive more messages and it freezes farther out. Emit later and it is too late: what you see is old light from a beacon that has already left. Just after you emit, sources outside the shell look bluer by √(1−8GM<sub>old</sub>)/√(1−8GM<sub>new</sub>), because their light gains energy crossing the shell.</p>
     </div>
   </aside>
 </main>
