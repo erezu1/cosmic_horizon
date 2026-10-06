@@ -612,7 +612,6 @@
     const { cx, cy } = skyGeom();
     const x = ev.clientX - rect.left, y = ev.clientY - rect.top;
     if (Math.hypot(x - cx, y - cy) < 2) return;
-    closeSheets();
     fire(Math.atan2(-(y - cy), x - cx), S.ring || ev.shiftKey);
   });
 
@@ -686,7 +685,8 @@
   }
   for (const x of document.querySelectorAll('[data-close]')) x.addEventListener('click', closeSheets);
   document.addEventListener('pointerdown', ev => {
-    if (!ev.target.closest('.sheet') && !ev.target.closest('[data-sheet]')) closeSheets();
+    // Menus stay open while you play (sky, toolbar); other clicks outside close them.
+    if (!ev.target.closest('.sheet, [data-sheet], #view, .toolbar')) closeSheets();
   });
 
   let mathDone = false;
