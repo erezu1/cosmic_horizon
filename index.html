@@ -10,13 +10,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="style.css?v=12">
+<link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></symbol>
   <symbol id="i-pause" viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></symbol>
-  <symbol id="i-ring" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="5.2" stroke-width="1.8"/><path stroke-width="1.6" d="M12 4.6V1.8M10.4 3.2 12 1.6l1.6 1.6M12 19.4v2.8M10.4 20.8 12 22.4l1.6-1.6M4.6 12H1.8M3.2 10.4 1.6 12l1.6 1.6M19.4 12h2.8M20.8 10.4 22.4 12l-1.6 1.6"/></g></symbol>
+  <symbol id="i-ring" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12.00" cy="6.80" r="1.35" fill="currentColor" stroke="none"/><path d="M12.00 4.70L12.00 1.40M13.20 2.90L12.00 1.40L10.80 2.90"/><circle cx="7.50" cy="9.40" r="1.35" fill="currentColor" stroke="none"/><path d="M5.68 8.35L2.82 6.70M4.72 6.41L2.82 6.70L3.52 8.49"/><circle cx="7.50" cy="14.60" r="1.35" fill="currentColor" stroke="none"/><path d="M5.68 15.65L2.82 17.30M3.52 15.51L2.82 17.30L4.72 17.59"/><circle cx="12.00" cy="17.20" r="1.35" fill="currentColor" stroke="none"/><path d="M12.00 19.30L12.00 22.60M10.80 21.10L12.00 22.60L13.20 21.10"/><circle cx="16.50" cy="14.60" r="1.35" fill="currentColor" stroke="none"/><path d="M18.32 15.65L21.18 17.30M19.28 17.59L21.18 17.30L20.48 15.51"/><circle cx="16.50" cy="9.40" r="1.35" fill="currentColor" stroke="none"/><path d="M18.32 8.35L21.18 6.70M20.48 8.49L21.18 6.70L19.28 6.41"/></g></symbol>
   <symbol id="i-reset" viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 2.1-5M5 4.5V8h3.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-gauge" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/></g></symbol>
   <symbol id="i-list" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 7h11M9 12h11M9 17h11"/><circle cx="5" cy="7" r="1" fill="currentColor"/><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="5" cy="17" r="1" fill="currentColor"/></g></symbol>
@@ -57,8 +57,8 @@
       </div>
 
       <div id="penZoom" class="chips glass" hidden>
-        <button id="pFull" aria-pressed="true">Full history</button>
-        <button id="pNow" aria-pressed="false">Centre on now</button>
+        <button id="pNow" aria-pressed="true">Now</button>
+        <button id="pFull" aria-pressed="false">Full</button>
       </div>
 
       <div id="hint" class="glass">Tap the sky to launch a beacon</div>
@@ -136,7 +136,7 @@
     <h3>The Penrose diagram</h3>
     <p>The diagram uses null coordinates $U = e^{\tau_{\text{out}}/\ell}$ and $V = \mp e^{-\tau_{\text{in}}/\ell}$, where $\tau_{\text{out}}$ ($\tau_{\text{in}}$) is your clock reading when the outgoing (ingoing) light ray through a point leaves (reaches) you, compactified with $\arctan$. Light always moves at 45°. Your worldline is $UV=-1$, $\mathscr{I}^+$ is $UV=1$, and the event horizon is $V=0$.</p>
     <p>Solid worldlines are already determined: they lie inside your current future light cone's past, $u \le u_{\text{now}}$. Dashed continuations are predictions that assume you emit nothing more. A later shell will bend them.</p>
-    <p><b>Centre on now</b> applies $U\to U e^{-\tau/\ell},\ V\to V e^{\tau/\ell}$, a translation in static time that leaves your worldline and $\mathscr{I}^+$ fixed. The present sits mid-left, and the earlier history is squeezed against the past horizon. Once you have radiated all your mass, the neighbourhood of now is visibly the static patch of empty de Sitter.</p>
+    <p><b>Now</b> (the default) applies $U\to U e^{-\tau/\ell},\ V\to V e^{\tau/\ell}$, a translation in static time that leaves your worldline and $\mathscr{I}^+$ fixed. The present sits mid-left, and the earlier history is squeezed against the past horizon. Once you have radiated all your mass, the neighbourhood of now is visibly the static patch of empty de Sitter.</p>
 
     <h3>Launching</h3>
     <p>Each launch radiates $\Delta M$ as an outgoing null shell. This is exact for a ring; a single beacon's mass is spread over a ring (s-wave approximation). Stars and beacons are test particles: stars follow the Hubble flow, $\dot r = r/\ell$, and beacons are launched at speed $v$. Brightness is schematic.</p>
@@ -153,8 +153,8 @@
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="js/physics.js?v=12"></script>
-<script src="js/colors.js?v=12"></script>
-<script src="js/main.js?v=12"></script>
+<script src="js/physics.js?v=13"></script>
+<script src="js/colors.js?v=13"></script>
+<script src="js/main.js?v=13"></script>
 </body>
 </html>

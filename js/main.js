@@ -633,7 +633,7 @@
   $('reset').addEventListener('click', () => { reset(); $('hint').classList.remove('hidden'); });
 
   let view = 'sky';
-  let penMode = store.get('penMode') === 'now' ? 'now' : 'full';
+  let penMode = store.get('penMode') === 'full' ? 'full' : 'now';
   function setPenMode(m) {
     penMode = m;
     $('pFull').setAttribute('aria-pressed', String(m === 'full'));
