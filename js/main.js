@@ -13,7 +13,7 @@
   const MSG_PERIOD = 0.15 / DOP_LAUNCH;   // beacon proper time per message: one per 0.15ℓ of yours at launch
   const Z_LOST = 1e7;           // beyond this, treat a source as gone from view
   const N_STARS = 90;
-  const STAR_SIZE = 1.7;          // one size for stars and beacons
+  const STAR_SIZE = 2.6;          // one size for stars and beacons
   const BURST_TIME = 0.2;        // each pre-game star burst lasts this long (ℓ)…
   const BURST_STEPS = 8;         // …as this many sub-launches, each star carrying its share of the mass
   const RING_N = 12;
