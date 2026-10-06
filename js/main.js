@@ -187,7 +187,7 @@
     circle(c, cx, cy, R); c.stroke();
     c.setLineDash([]);
     c.fillStyle = 'rgba(255,255,255,0.32)';
-    c.font = '13px Inter, system-ui, sans-serif';
+    c.font = '13px Manrope, system-ui, sans-serif';
     c.textAlign = 'center';
     c.fillText('r = ℓ  (empty dS)', cx, cy + R + 15 < h - 4 ? cy + R + 15 : cy + R - 7);
     c.textAlign = 'center';
@@ -339,7 +339,7 @@
 
     if (labelsOn) {                 // names only while the beacon list is open
       c.fillStyle = `rgba(230,236,255,${0.45 + 0.4 * Math.min(1, al)})`;
-      c.font = '12px Inter, system-ui, sans-serif';
+      c.font = '12px Manrope, system-ui, sans-serif';
       c.textAlign = 'left';
       c.fillText(`B${s.id} #${Math.floor(e.tau / MSG_PERIOD)}`, x + 7, y - 6);
     }
@@ -374,7 +374,7 @@
       c.fillStyle = g; c.fillRect(X(100), top, X(750) - X(100), bot - top);
     }
 
-    c.font = '11.5px Inter, system-ui, sans-serif';
+    c.font = '11.5px Manrope, system-ui, sans-serif';
     c.textAlign = 'center';
     c.fillStyle = 'rgba(200,210,240,0.75)';
     const lbl = [['UV', 200], ['vis', 530], ['infrared', 2.5e4], ['microwave', 3e7], ['radio', 3e9]];
@@ -594,7 +594,7 @@
     c.restore();
     { const [x, y] = toXY(g, Pn, Qn); c.fillStyle = '#ffd27a'; circle(c, x, y, 4); c.fill(); }
 
-    c.font = '13px Inter, system-ui, sans-serif';
+    c.font = '13px Manrope, system-ui, sans-serif';
     c.fillStyle = 'rgba(200,210,240,0.85)';
     c.textAlign = 'center';
     c.fillText('I⁺', g.cx, g.cy - HALF * g.s - 7);

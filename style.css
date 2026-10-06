@@ -17,7 +17,7 @@
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); overflow: hidden; }
 body {
-  font: 15px/1.5 Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font: 15px/1.5 Manrope, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   background:
     radial-gradient(1100px 620px at 78% -12%, rgba(120, 95, 255, 0.16), transparent 62%),
@@ -279,3 +279,9 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (max-width: 560px) {
   .brand .tag { display: none; }
 }
+
+/* Display face for the title, headings and controls. */
+.brand h1, .sheet h2, .notes h3, .tool, .seg button, #penZoom button, .icon.q {
+  font-family: "Space Grotesk", Manrope, system-ui, sans-serif;
+}
+.brand h1 { letter-spacing: -0.01em; }
