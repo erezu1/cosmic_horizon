@@ -55,7 +55,7 @@
       const x = 0.03 + 0.8 * Math.pow(rnd(), 1.15);    // seen at x·r_c at τ = 0
       sources.push({
         kind: 'star', phi: rnd() * TAU, wl: makeHubbleStar(st, x * a),
-        lamEm: 395 + 80 * rnd(), size: 0.8 + 1.5 * rnd() * rnd(), jit: rnd(),
+        lamEm: 395 + 80 * rnd(), size: 0.9 + 1.5 * rnd() * rnd(), jit: rnd(), rot: 0.25 * (rnd() - 0.5),
         hint: 1e9, obs: null, pq: newPQ(), tail: null,
       });
     }
@@ -239,7 +239,18 @@
     g.addColorStop(1, rgba(col, 0));
     c.fillStyle = g; circle(c, x, y, rad * 4); c.fill();
     c.fillStyle = rgba(col, Math.min(1, 0.25 + al));
-    circle(c, x, y, rad); c.fill();
+    starPath(c, x, y, rad * 2.4, rad * 1.0, s.rot); c.fill();
+  }
+
+  // Five-pointed star outline centred on (x, y).
+  function starPath(c, x, y, rOut, rIn, rot) {
+    c.beginPath();
+    for (let k = 0; k < 10; k++) {
+      const a = rot - HALF + k * PI / 5, r = k % 2 ? rIn : rOut;
+      const px = x + r * Math.cos(a), py = y + r * Math.sin(a);
+      if (k) c.lineTo(px, py); else c.moveTo(px, py);
+    }
+    c.closePath();
   }
 
   let labelsOn = false;
