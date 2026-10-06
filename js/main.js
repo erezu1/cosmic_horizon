@@ -1,0 +1,599 @@
+(function () {
+  'use strict';
+  const { Spacetime, Worldline, makeHubbleStar, findEmission, tailOf } = DS;
+  const $ = id => document.getElementById(id);
+  const PI = Math.PI, HALF = PI / 2, TAU = 2 * PI;
+
+  const SEEN_AT_LAUNCH = 450;   // nm: beacons are tuned so you first receive them blue
+  const MSG_PERIOD = 0.05;      // beacon proper time between numbered messages (ℓ)
+  const Z_LOST = 1e7;           // beyond this, treat a source as gone from view
+  const N_STARS = 90;
+  const RING_N = 12;
+
+  const sky = $('sky'), spec = $('spectrum'), pen = $('penrose');
+  const cS = sky.getContext('2d'), cP = spec.getContext('2d'), cN = pen.getContext('2d');
+
+  // ---------- UI ----------
+  const ui = {};
+  function readUI() {
+    ui.speed = Math.pow(10, +$('speed').value);
+    ui.dm = +$('dm').value;
+    ui.v = +$('v').value;
+    ui.m0 = +$('m0').value;
+    ui.ir = $('ir').checked;
+    ui.waves = $('waves').checked;
+    ui.oldH = $('oldH').checked;
+    ui.stars = $('stars').checked;
+    $('speedVal').textContent = ui.speed.toFixed(2) + ' ℓ/s';
+    $('dmVal').textContent = ui.dm.toFixed(2);
+    $('vVal').textContent = ui.v.toFixed(2) + 'c';
+    $('m0Val').textContent = ui.m0.toFixed(2) + (S && Math.abs(ui.m0 - S.st.m0) > 1e-9 ? ' (on reset)' : '');
+  }
+  for (const id of ['speed', 'dm', 'v', 'm0', 'ir', 'waves', 'oldH', 'stars']) $(id).addEventListener('input', readUI);
+
+  // ---------- state ----------
+  let S = null;
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  const newPQ = () => ({ ver: -1, P: [], Q: [] });
+
+  function reset() {
+    readUI();
+    const st = new Spacetime(ui.m0);
+    const a = st.aR[0];
+    const rnd = mulberry32(20261006);
+    const sources = [];
+    for (let i = 0; i < N_STARS; i++) {
+      const x = 0.03 + 0.8 * Math.pow(rnd(), 1.15);    // seen at x·r_c at τ = 0
+      sources.push({
+        kind: 'star', phi: rnd() * TAU, wl: makeHubbleStar(st, x * a),
+        lamEm: 395 + 80 * rnd(), size: 0.8 + 1.5 * rnd() * rnd(), jit: rnd(),
+        hint: 1e9, obs: null, pq: newPQ(), tail: null,
+      });
+    }
+    const playing = S ? S.playing : true;
+    S = { st, sources, tau: 0, u: 0, playing, nBeacons: 0, flashes: [], frame: 0, cone: null,
+          ring: S ? S.ring : false, pen: { ver: -1 }, tailFrame: -1 };
+    readUI();
+    step();
+    updateList();
+  }
+
+  function fire(phi, ring) {
+    const st = S.st;
+    const dm = Math.min(ui.dm, st.mNow);
+    if (dm > 1e-9) st.addShell(S.u, dm);
+    const a = st.aR[st.region(S.u)];
+    const v = ui.v, g = 1 / Math.sqrt(1 - v * v);
+    const n = ring ? RING_N : 1;
+    for (let i = 0; i < n; i++) {
+      const id = ++S.nBeacons;
+      S.sources.push({
+        kind: 'beacon', id, v, phi: phi + TAU * i / n,
+        wl: new Worldline(S.u, 0, g * (1 - v) / a, 0),
+        lamEm: SEEN_AT_LAUNCH * Math.sqrt((1 - v) / (1 + v)),
+        hue: (id * 137.508) % 360, jit: Math.random(),
+        hint: 0, msg: 0, obs: null, pq: newPQ(), tail: null, tau0: S.tau,
+      });
+    }
+    S.flashes.push({ t: performance.now(), dm });
+    $('hint').classList.add('hidden');
+    step();
+    updateList();
+  }
+
+  // ---------- physics step ----------
+  function step() {
+    const st = S.st;
+    S.u = st.uOfTau(S.tau);
+    for (const s of S.sources) if (!s.gone) s.wl.advance(st, S.u);
+    const cone = st.pastCone(S.u);
+    S.cone = cone;
+    for (const s of S.sources) {
+      if (s.gone) { s.obs = null; continue; }
+      const e = findEmission(s.wl, cone, st, s.hint);
+      if (!e) { s.obs = null; continue; }
+      s.hint = e.j;
+      e.lam = s.lamEm * e.z1;
+      s.obs = e;
+      if (s.kind === 'beacon') s.msg = Math.max(s.msg, Math.floor(e.tau / MSG_PERIOD));
+      if (e.z1 > Z_LOST && s.wl.done) { s.gone = true; s.obs = null; }
+    }
+  }
+
+  // ---------- canvas helpers ----------
+  function fit(canvas) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    const W = Math.max(1, Math.round(w * dpr)), H = Math.max(1, Math.round(h * dpr));
+    if (canvas.width !== W || canvas.height !== H) { canvas.width = W; canvas.height = H; }
+    return { w, h, dpr };
+  }
+  const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+  const brightness = z1 => Math.min(1, 1.4 * Math.pow(z1, -0.5));
+
+  function circle(c, x, y, r) { c.beginPath(); c.arc(x, y, Math.max(0, r), 0, TAU); }
+
+  // ---------- the sky ----------
+  function skyGeom() {
+    const { w, h } = { w: sky.clientWidth, h: sky.clientHeight };
+    return { cx: w / 2, cy: h / 2, R: 0.47 * Math.min(w, h) };
+  }
+
+  function drawSky(now) {
+    const { w, h, dpr } = fit(sky);
+    const c = cS;
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const { cx, cy, R } = skyGeom();
+    const st = S.st, aNow = st.aNow, mNow = st.mNow;
+
+    c.fillStyle = '#04060c';
+    c.fillRect(0, 0, w, h);
+
+    // Inside the horizon: faint glow, so the observable region reads as a disc.
+    const g0 = c.createRadialGradient(cx, cy, 0, cx, cy, aNow * R);
+    g0.addColorStop(0, 'rgba(30,40,80,0.35)');
+    g0.addColorStop(1, 'rgba(20,28,60,0.10)');
+    c.fillStyle = g0; circle(c, cx, cy, aNow * R); c.fill();
+
+    // Reference circles in areal radius.
+    c.lineWidth = 1;
+    c.strokeStyle = 'rgba(255,255,255,0.05)';
+    for (const r of [0.25, 0.5, 0.75]) { circle(c, cx, cy, r * R); c.stroke(); }
+    c.setLineDash([3, 5]);
+    c.strokeStyle = 'rgba(255,255,255,0.16)';
+    circle(c, cx, cy, R); c.stroke();
+    c.setLineDash([]);
+    c.fillStyle = 'rgba(255,255,255,0.32)';
+    c.font = '11px system-ui, sans-serif';
+    c.textAlign = 'center';
+    c.textAlign = 'left';
+    c.fillText('r = ℓ  (pure dS)', cx + 0.72 * R, cy - 0.72 * R);
+    c.textAlign = 'center';
+
+    // Earlier horizons.
+    if (ui.oldH) {
+      c.setLineDash([2, 4]);
+      c.strokeStyle = 'rgba(127,208,255,0.28)';
+      for (let k = 0; k < st.aR.length - 1; k++) { circle(c, cx, cy, st.aR[k] * R); c.stroke(); }
+      c.setLineDash([]);
+    }
+
+    // The horizon now.
+    const rh = aNow * R;
+    const gh = c.createRadialGradient(cx, cy, Math.max(0, rh - 14), cx, cy, rh + 16);
+    gh.addColorStop(0, 'rgba(127,208,255,0)');
+    gh.addColorStop(0.47, 'rgba(127,208,255,0.30)');
+    gh.addColorStop(1, 'rgba(127,208,255,0)');
+    c.fillStyle = gh; circle(c, cx, cy, rh + 16); c.fill();
+    c.strokeStyle = 'rgba(160,215,255,0.95)';
+    c.lineWidth = 1.6;
+    circle(c, cx, cy, rh); c.stroke();
+    c.fillStyle = 'rgba(160,215,255,0.95)';
+    c.fillText(`horizon  r꜀ = ${aNow.toFixed(3)} ℓ`, cx, cy - rh - 8 < 12 ? cy - rh + 16 : cy - rh - 8);
+
+    // Sources.
+    const t = now / 1000;
+    if (ui.stars) for (const s of S.sources) if (s.kind === 'star') drawStar(c, s, cx, cy, R);
+    for (const s of S.sources) if (s.kind === 'beacon') drawBeacon(c, s, cx, cy, R, t);
+
+    // You.
+    const rm = 3 + 7 * mNow;
+    const go = c.createRadialGradient(cx, cy, 0, cx, cy, rm * 3);
+    go.addColorStop(0, 'rgba(255,240,210,0.9)');
+    go.addColorStop(1, 'rgba(255,200,120,0)');
+    c.fillStyle = go; circle(c, cx, cy, rm * 3); c.fill();
+    c.fillStyle = '#fff6e6'; circle(c, cx, cy, rm); c.fill();
+
+    // Launch flashes (just a UI cue at your position).
+    S.flashes = S.flashes.filter(f => now - f.t < 700);
+    for (const f of S.flashes) {
+      const p = (now - f.t) / 700;
+      c.strokeStyle = `rgba(255,170,90,${0.6 * (1 - p)})`;
+      c.lineWidth = 2;
+      circle(c, cx, cy, rm + 30 * p); c.stroke();
+    }
+
+    drawHUD(c, w);
+  }
+
+  function drawStar(c, s, cx, cy, R) {
+    const e = s.obs;
+    if (!e || e.z1 > Z_LOST) return;
+    const x = cx + e.r * R * Math.cos(s.phi), y = cy - e.r * R * Math.sin(s.phi);
+    const col = Colors.rgb(e.lam, ui.ir);
+    let al = brightness(e.z1);
+    if (ui.ir) al = Math.max(al, 0.6);
+    const rad = s.size * (0.6 + 0.6 * al);
+    const g = c.createRadialGradient(x, y, 0, x, y, rad * 4);
+    g.addColorStop(0, rgba(col, 0.55 * al));
+    g.addColorStop(1, rgba(col, 0));
+    c.fillStyle = g; circle(c, x, y, rad * 4); c.fill();
+    c.fillStyle = rgba(col, Math.min(1, 0.25 + al));
+    circle(c, x, y, rad); c.fill();
+  }
+
+  function drawBeacon(c, s, cx, cy, R, t) {
+    const e = s.obs;
+    if (!e || e.z1 > Z_LOST) return;
+    const cos = Math.cos(s.phi), sin = Math.sin(s.phi);
+    const dist = e.r * R;
+    const x = cx + dist * cos, y = cy - dist * sin;
+    const col = Colors.rgb(e.lam, ui.ir);
+    const band = Colors.band(e.lam);
+    let al = Math.max(0.22, brightness(e.z1));
+    if (ui.ir) al = Math.max(al, 0.75);
+    const dash = ui.ir ? [] : band === 'infrared' ? [3, 2] : (band === 'microwave' || band === 'radio') ? [1, 3] : [];
+
+    // Wave glyph: a wavetrain heading to you, its drawn wavelength stretching with 1+z.
+    if (ui.waves && dist > 14) {
+      const L = Math.min(34, dist - 8);
+      const lpx = Math.min(90, 3.2 * Math.pow(e.z1, 0.33));
+      const nx = sin, ny = cos;                 // perpendicular to the radial direction (screen)
+      const dx = -cos, dy = sin;                // towards you
+      c.beginPath();
+      for (let k = 0; k <= L; k += 0.75) {
+        const amp = 2.6 * Math.sin(PI * k / L);
+        const off = amp * Math.sin(TAU * (k / lpx) - TAU * 1.2 * t);
+        const px = x + dx * (6 + k) + nx * off, py = y + dy * (6 + k) + ny * off;
+        if (k === 0) c.moveTo(px, py); else c.lineTo(px, py);
+      }
+      c.setLineDash(dash);
+      c.strokeStyle = rgba(col, 0.85 * al);
+      c.lineWidth = 1.3;
+      c.stroke();
+      c.setLineDash([]);
+    }
+
+    const g = c.createRadialGradient(x, y, 0, x, y, 14);
+    g.addColorStop(0, rgba(col, 0.6 * al));
+    g.addColorStop(1, rgba(col, 0));
+    c.fillStyle = g; circle(c, x, y, 14); c.fill();
+    c.fillStyle = rgba(col, Math.min(1, 0.3 + al));
+    circle(c, x, y, 3.4); c.fill();
+
+    // Message flash: once per MSG_PERIOD of the beacon's own clock, as received.
+    const ph = (e.tau / MSG_PERIOD) % 1;
+    if (ph < 0.3) {
+      const p = ph / 0.3;
+      c.setLineDash(dash);
+      c.strokeStyle = rgba(col, (1 - p) * Math.max(al, 0.4));
+      c.lineWidth = 1.4;
+      circle(c, x, y, 4 + 10 * p); c.stroke();
+      c.setLineDash([]);
+    }
+
+    c.fillStyle = `rgba(230,236,255,${0.45 + 0.4 * Math.min(1, al)})`;
+    c.font = '10px system-ui, sans-serif';
+    c.textAlign = 'left';
+    c.fillText(`B${s.id} #${Math.floor(e.tau / MSG_PERIOD)}`, x + 7, y - 6);
+  }
+
+  function drawHUD(c, w) {
+    const st = S.st, a = st.aNow, m = st.mNow;
+    const small = w < 420;
+    c.font = `${small ? 11 : 12}px system-ui, sans-serif`;
+    c.textAlign = 'left';
+    const lines = [
+      [`τ = ${S.tau.toFixed(2)} ℓ`, 'your proper time'],
+      [`8GM = ${m.toFixed(3)}`, m === 0 ? 'pure de Sitter' : `deficit ${(360 * (1 - a)).toFixed(0)}°`],
+      [`r꜀ = ${a.toFixed(3)} ℓ`, `S/S_dS = ${a.toFixed(3)}`],
+    ];
+    let y = 18;
+    for (const [main, aux] of lines) {
+      c.fillStyle = 'rgba(230,236,255,0.92)';
+      c.fillText(main, 10, y);
+      c.fillStyle = 'rgba(138,150,187,0.95)';
+      c.fillText(aux, small ? 92 : 104, y);
+      y += small ? 15 : 17;
+    }
+    if (!S.playing) {
+      c.textAlign = 'right';
+      c.fillStyle = 'rgba(255,210,122,0.95)';
+      c.fillText('paused', w - 10, 18);
+    }
+  }
+
+  // ---------- spectrum strip ----------
+  const L0 = 2, L1 = 10;   // log10(λ / nm): 100 nm … 10 m
+  function drawSpectrum() {
+    const { w, h, dpr } = fit(spec);
+    const c = cP;
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.fillStyle = '#070a14'; c.fillRect(0, 0, w, h);
+    const x0 = 8, x1 = w - 8;
+    const X = nm => x0 + (Math.log10(nm) - L0) / (L1 - L0) * (x1 - x0);
+    const top = 16, bot = h - 16;
+
+    if (ui.ir) {
+      const g = c.createLinearGradient(x0, 0, x1, 0);
+      for (const [lx, col] of Colors.STOPS) {
+        const f = (lx - L0) / (L1 - L0);
+        if (f >= 0 && f <= 1) g.addColorStop(f, rgba(col, 0.35));
+      }
+      c.fillStyle = g; c.fillRect(x0, top, x1 - x0, bot - top);
+    } else {
+      const bands = [[100, 380, [90, 60, 160]], [750, 1e6, [90, 20, 25]], [1e6, 1e9, [45, 50, 70]], [1e9, 1e10, [30, 32, 45]]];
+      for (const [a, b, col] of bands) { c.fillStyle = rgba(col, 0.45); c.fillRect(X(a), top, X(b) - X(a), bot - top); }
+      const g = c.createLinearGradient(X(380), 0, X(750), 0);
+      for (let nm = 380; nm <= 750; nm += 20) g.addColorStop((nm - 380) / 370, rgba(Colors.visibleRGB(nm), 0.8));
+      c.fillStyle = g; c.fillRect(X(380), top, X(750) - X(380), bot - top);
+    }
+
+    c.font = '10px system-ui, sans-serif';
+    c.textAlign = 'center';
+    c.fillStyle = 'rgba(200,210,240,0.75)';
+    const lbl = [['UV', 200], ['vis', 530], ['infrared', 2.5e4], ['microwave', 3e7], ['radio', 3e9]];
+    for (const [t, nm] of lbl) c.fillText(t, X(nm), 11);
+    c.fillStyle = 'rgba(138,150,187,0.8)';
+    for (const [t, nm] of [['1 µm', 1e3], ['1 mm', 1e6], ['1 m', 1e9]]) {
+      c.fillRect(X(nm), bot, 1, 3);
+      c.fillText(t, X(nm), h - 3);
+    }
+
+    for (const s of S.sources) {
+      const e = s.obs;
+      if (!e || e.z1 > Z_LOST) continue;
+      if (s.kind === 'star' && !ui.stars) continue;
+      const x = X(e.lam);
+      if (x < x0 || x > x1) continue;
+      if (s.kind === 'star') {
+        c.fillStyle = `rgba(230,236,255,${0.25 + 0.5 * brightness(e.z1)})`;
+        circle(c, x, top + 4 + s.jit * (bot - top - 8), 1.3); c.fill();
+      } else {
+        const y = top + 6 + s.jit * (bot - top - 12);
+        c.fillStyle = `hsl(${s.hue},85%,68%)`;
+        c.beginPath(); c.moveTo(x, y - 5); c.lineTo(x + 4, y + 3); c.lineTo(x - 4, y + 3); c.closePath(); c.fill();
+      }
+    }
+  }
+
+  // ---------- Penrose diagram ----------
+  function penGeom() {
+    const w = pen.clientWidth, h = pen.clientHeight;
+    const pad = 16;
+    return { cx: w / 2, cy: h / 2, s: (Math.min(w, h) / 2 - pad) / HALF };
+  }
+  function toXY(g, P, Q) { return [g.cx + (Q - P) * g.s, g.cy - (P + Q) * g.s]; }
+
+  function rebuildPenroseStatic() {
+    const st = S.st, N = 120;
+    const pts = [];
+    pts.push([0, -HALF], [HALF, 0], [0, HALF]);                  // you (left edge), I⁺ (top edge)
+    for (let i = 1; i < N; i++) {                                // antipode (right edge)
+      const P0 = -HALF * i / N, U0 = Math.tan(P0);
+      pts.push([P0, Math.atan(st.labelFromV0(-1 / U0))]);
+    }
+    pts.push([-HALF, Math.atan(st.labelFromV0(0))]);
+    for (let i = N - 1; i >= 1; i--) {                           // I⁻ (bottom edge)
+      const P0 = -HALF * i / N, U0 = Math.tan(P0);
+      pts.push([P0, Math.atan(st.labelFromV0(1 / U0))]);
+    }
+    S.pen.outline = pts;
+
+    // Apparent horizon r = r_c(m(u)) in every region (future part assumes no more emission).
+    const ah = [];
+    const nR = st.aR.length;
+    for (let k = 0; k < nR; k++) {
+      const uLo = k === 0 ? -12 : st.shellU[k - 1];
+      const uHi = k < nR - 1 ? st.shellU[k] : uLo + 40;
+      const M = 50;
+      const seg = [];
+      for (let i = 0; i <= M; i++) {
+        const u = uLo + (uHi - uLo) * i / M;
+        const uu = i === M && k < nR - 1 ? u - 1e-9 : u;
+        seg.push([Math.atan(Math.exp(st.tau(uu))), Math.atan(st.labelV(uu, st.aR[k]))]);
+      }
+      ah.push(seg);
+    }
+    S.pen.ah = ah;
+    S.pen.ver = st.version;
+  }
+
+  function updatePQ(s) {
+    const st = S.st, pq = s.pq, wl = s.wl;
+    if (pq.ver !== st.version) { pq.ver = st.version; pq.P.length = 0; pq.Q.length = 0; }
+    const n = wl.committed;
+    for (let i = pq.P.length; i < n; i++) {
+      const p = st.pq(wl.U[i], wl.R[i]);
+      pq.P.push(p[0]); pq.Q.push(p[1]);
+    }
+  }
+
+  function updateTail(s) {
+    const st = S.st;
+    const t = tailOf(st, s.wl);
+    const P = [], Q = [];
+    for (let i = 0; i < t.U.length; i += 2) {
+      const p = st.pq(t.U[i], t.R[i]);
+      P.push(p[0]); Q.push(p[1]);
+    }
+    s.tail = { P, Q, ver: st.version };
+  }
+
+  function strokePoly(c, g, P, Q, extra) {
+    c.beginPath();
+    for (let i = 0; i < P.length; i++) {
+      const [x, y] = toXY(g, P[i], Q[i]);
+      if (i === 0) c.moveTo(x, y); else c.lineTo(x, y);
+    }
+    if (extra) { const [x, y] = toXY(g, extra[0], extra[1]); c.lineTo(x, y); }
+    c.stroke();
+  }
+
+  function drawPenrose() {
+    const st = S.st;
+    if (S.pen.ver !== st.version) rebuildPenroseStatic();
+    const refreshTails = S.frame - S.tailFrame > 30 || S.tailVer !== st.version;
+    if (refreshTails) { S.tailFrame = S.frame; S.tailVer = st.version; }
+
+    const { w, h, dpr } = fit(pen);
+    const c = cN;
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.fillStyle = '#0b1020'; c.fillRect(0, 0, w, h);
+    const g = penGeom();
+    const Un = Math.exp(S.tau), Pn = Math.atan(Un), Qn = Math.atan(-1 / Un);
+
+    // Outline and clip.
+    const outline = new Path2D();
+    S.pen.outline.forEach(([P, Q], i) => { const [x, y] = toXY(g, P, Q); if (i) outline.lineTo(x, y); else outline.moveTo(x, y); });
+    outline.closePath();
+    c.save();
+    c.clip(outline);
+    c.fillStyle = '#060913'; c.fill(outline);
+
+    const quad = (Pa, Pb, Qa, Qb, fill) => {
+      c.beginPath();
+      [[Pa, Qa], [Pb, Qa], [Pb, Qb], [Pa, Qb]].forEach(([P, Q], i) => { const [x, y] = toXY(g, P, Q); if (i) c.lineTo(x, y); else c.moveTo(x, y); });
+      c.closePath(); c.fillStyle = fill; c.fill();
+    };
+    quad(-HALF, HALF, -HALF, 0, 'rgba(90,130,255,0.08)');       // everything you will ever see
+    quad(-HALF, Pn, -HALF, Qn, 'rgba(255,210,122,0.10)');        // everything you have seen so far
+
+    // Worldlines.
+    c.lineWidth = 0.8;
+    for (const s of S.sources) {
+      if (s.kind !== 'star' || !ui.stars) continue;
+      updatePQ(s);
+      if (refreshTails || !s.tail) { if (!s.gone || !s.tail || s.tail.ver !== st.version) updateTail(s); }
+      c.strokeStyle = 'rgba(159,176,224,0.22)';
+      strokePoly(c, g, s.pq.P, s.pq.Q);
+      c.setLineDash([2, 3]);
+      c.strokeStyle = 'rgba(159,176,224,0.12)';
+      strokePoly(c, g, s.tail.P, s.tail.Q);
+      c.setLineDash([]);
+    }
+    c.lineWidth = 1.3;
+    for (const s of S.sources) {
+      if (s.kind !== 'beacon') continue;
+      updatePQ(s);
+      if (refreshTails || !s.tail) { if (!s.gone || !s.tail || s.tail.ver !== st.version) updateTail(s); }
+      c.strokeStyle = `hsla(${s.hue},85%,68%,0.85)`;
+      strokePoly(c, g, s.pq.P, s.pq.Q);
+      c.setLineDash([3, 3]);
+      c.strokeStyle = `hsla(${s.hue},85%,68%,0.4)`;
+      strokePoly(c, g, s.tail.P, s.tail.Q);
+      c.setLineDash([]);
+    }
+
+    // Shells.
+    c.strokeStyle = 'rgba(255,154,74,0.8)';
+    c.lineWidth = 1.2;
+    for (let k = 0; k < st.shellU.length; k++) {
+      const U = Math.exp(st.tauR[k + 1]);
+      const P = Math.atan(U);
+      const [x1, y1] = toXY(g, P, Math.atan(-1 / U)), [x2, y2] = toXY(g, P, Math.atan(1 / U));
+      c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+    }
+
+    // Apparent horizon.
+    c.strokeStyle = 'rgba(127,208,255,0.9)';
+    c.lineWidth = 1.5;
+    for (const seg of S.pen.ah) strokePoly(c, g, seg.map(p => p[0]), seg.map(p => p[1]));
+
+    // Event horizon V = 0.
+    c.setLineDash([5, 4]);
+    c.strokeStyle = 'rgba(232,238,255,0.7)';
+    c.lineWidth = 1;
+    { const [x1, y1] = toXY(g, HALF, 0), [x2, y2] = toXY(g, -HALF, 0); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
+    c.setLineDash([]);
+
+    // Your light cones now.
+    c.strokeStyle = 'rgba(255,210,122,0.95)';
+    c.lineWidth = 1.6;
+    { const [x1, y1] = toXY(g, Pn, Qn), [x2, y2] = toXY(g, -HALF, Qn); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
+    c.strokeStyle = 'rgba(255,210,122,0.35)';
+    c.lineWidth = 1;
+    { const [x1, y1] = toXY(g, Pn, Qn), [x2, y2] = toXY(g, Pn, Math.atan(1 / Un)); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
+
+    // What you are seeing right now: emission events on the past cone.
+    for (const s of S.sources) {
+      const e = s.obs;
+      if (!e || e.z1 > Z_LOST || (s.kind === 'star' && !ui.stars)) continue;
+      const [P, Q] = st.pq(e.u, e.r);
+      const [x, y] = toXY(g, P, Q);
+      c.fillStyle = s.kind === 'star' ? 'rgba(230,236,255,0.6)' : `hsl(${s.hue},85%,68%)`;
+      circle(c, x, y, s.kind === 'star' ? 1.4 : 2.6); c.fill();
+    }
+    c.restore();
+
+    c.strokeStyle = 'rgba(232,238,255,0.55)';
+    c.lineWidth = 1.2;
+    c.stroke(outline);
+    { const [x, y] = toXY(g, Pn, Qn); c.fillStyle = '#ffd27a'; circle(c, x, y, 4); c.fill(); }
+
+    c.font = '11px system-ui, sans-serif';
+    c.fillStyle = 'rgba(200,210,240,0.85)';
+    c.textAlign = 'center';
+    c.fillText('I⁺', g.cx, g.cy - HALF * g.s - 4);
+    c.save();
+    c.translate(g.cx - HALF * g.s - 5, g.cy); c.rotate(-HALF);
+    c.fillText('you (r = 0)', 0, 0);
+    c.restore();
+    c.save();
+    c.translate(g.cx + HALF * g.s + 11, g.cy); c.rotate(HALF);
+    c.fillText('antipode', 0, 0);
+    c.restore();
+  }
+
+  // ---------- beacon list ----------
+  function updateList() {
+    const bs = S.sources.filter(s => s.kind === 'beacon').slice(-16).reverse();
+    const el = $('beacons');
+    if (!bs.length) { el.innerHTML = '<p class="muted">No beacons yet. Tap the sky to launch one.</p>'; return; }
+    el.innerHTML = bs.map(s => {
+      const e = s.obs;
+      const sw = `<span class="sw" style="background:hsl(${s.hue},85%,68%)"></span>`;
+      const head = `${sw}<b>B${s.id}</b><span>v=${s.v.toFixed(2)}c</span>`;
+      if (!e || e.z1 > Z_LOST) {
+        return `<div class="b gone">${head}<span>last message #${s.msg}</span><span>gone: 1+z &gt; 10⁷</span></div>`;
+      }
+      const col = Colors.rgb(e.lam, false);
+      const z = e.z1 < 1000 ? e.z1.toFixed(e.z1 < 10 ? 2 : 1) : e.z1.toExponential(1);
+      return `<div class="b">${head}<span>message #${Math.floor(e.tau / MSG_PERIOD)}</span><span>1+z = ${z}</span>` +
+             `<span style="color:${rgba(col.map(x => Math.max(x, 70)), 1)}">${Colors.formatLambda(e.lam)} · ${Colors.band(e.lam)}</span></div>`;
+    }).join('');
+  }
+
+  // ---------- events ----------
+  sky.addEventListener('pointerdown', ev => {
+    const rect = sky.getBoundingClientRect();
+    const { cx, cy } = skyGeom();
+    const x = ev.clientX - rect.left, y = ev.clientY - rect.top;
+    if (Math.hypot(x - cx, y - cy) < 2) return;
+    fire(Math.atan2(-(y - cy), x - cx), S.ring || ev.shiftKey);
+  });
+  $('play').addEventListener('click', () => { S.playing = !S.playing; $('play').textContent = S.playing ? 'Pause' : 'Play'; });
+  $('ring').addEventListener('click', () => { S.ring = !S.ring; $('ring').setAttribute('aria-pressed', String(S.ring)); });
+  $('reset').addEventListener('click', () => { reset(); $('hint').classList.remove('hidden'); });
+  window.addEventListener('keydown', ev => {
+    if (ev.code === 'Space' && ev.target === document.body) { ev.preventDefault(); $('play').click(); }
+  });
+
+  // ---------- loop ----------
+  let last = performance.now();
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    if (S.playing) S.tau += ui.speed * dt;
+    step();
+    drawSky(now);
+    drawSpectrum();
+    if (S.frame % 2 === 0) drawPenrose();
+    if (S.frame % 10 === 0) updateList();
+    S.frame++;
+    requestAnimationFrame(frame);
+  }
+
+  reset();
+  window.cosmicHorizon = { state: () => S, fire: (phi, ring) => fire(phi, !!ring) };
+  requestAnimationFrame(frame);
+})();
