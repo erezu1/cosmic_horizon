@@ -98,6 +98,15 @@
   function fire(phi, ring) {
     const st = S.st;
     // What you launch carries the mass: a thin shell leaving with it (s-wave for one beacon).
+    // You can only give away mass you still have (the last launch takes the remainder).
+    if (st.mNow <= 1e-9 && ui.dm > 0) {
+      const hint = $('hint');
+      hint.textContent = 'No mass left: you are empty de Sitter now';
+      hint.classList.remove('hidden');
+      clearTimeout(fire._t);
+      fire._t = setTimeout(() => hint.classList.add('hidden'), 2500);
+      return;
+    }
     const dm = Math.min(ui.dm, st.mNow);
     if (dm > 1e-9) { S.oldHorizons.push(st.aNow); st.addShell(S.u, dm); }
     const a = st.aR[st.region(S.u)];
@@ -671,7 +680,11 @@
     $('ring').setAttribute('aria-pressed', String(S.ring));
     $('hint').textContent = S.ring ? 'Tap the sky to emit a shell of 12 beacons' : 'Tap the sky to launch a beacon';
   });
-  $('reset').addEventListener('click', () => { reset(); $('hint').classList.remove('hidden'); });
+  $('reset').addEventListener('click', () => {
+    reset();
+    $('hint').textContent = S.ring ? 'Tap the sky to emit a shell of 12 beacons' : 'Tap the sky to launch a beacon';
+    $('hint').classList.remove('hidden');
+  });
 
   let view = 'sky';
   let penMode = store.get('penMode') === 'full' ? 'full' : 'now';
