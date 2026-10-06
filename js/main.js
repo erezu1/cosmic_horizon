@@ -13,6 +13,7 @@
   const MSG_PERIOD = 0.15 / DOP_LAUNCH;   // beacon proper time per message: one per 0.15ℓ of yours at launch
   const Z_LOST = 1e7;           // beyond this, treat a source as gone from view
   const N_STARS = 90;
+  const STAR_SIZE = 1.7;          // one size for stars and beacons
   const BURST_TIME = 0.2;        // each pre-game star burst lasts this long (ℓ)…
   const BURST_STEPS = 8;         // …as this many sub-launches, each star carrying its share of the mass
   const RING_N = 12;
@@ -80,7 +81,7 @@
           sources.push({
             kind: 'star', phi: off + TAU * (j + 0.8 * (rnd() - 0.5)) / perBurst,
             wl: new Worldline(u, 0, g * (1 - v) / a, 0),
-            lamEm: (380 + 110 * rnd()) / dop, size: 0.9 + 1.5 * rnd() * rnd(), jit: rnd(), rot: 0.25 * (rnd() - 0.5),
+            lamEm: (380 + 110 * rnd()) / dop, size: STAR_SIZE, jit: rnd(), rot: 0.25 * (rnd() - 0.5),
             hint: 1e9, obs: null, pq: newPQ(), tail: null,
           });
         }
@@ -328,12 +329,14 @@
       c.setLineDash([]);
     }
 
-    const g = c.createRadialGradient(x, y, 0, x, y, 14);
-    g.addColorStop(0, rgba(col, 0.6 * al));
+    // Same star icon and size as the background stars.
+    const rad = STAR_SIZE * (0.6 + 0.6 * Math.min(1, al));
+    const g = c.createRadialGradient(x, y, 0, x, y, rad * 4);
+    g.addColorStop(0, rgba(col, 0.55 * al));
     g.addColorStop(1, rgba(col, 0));
-    c.fillStyle = g; circle(c, x, y, 14); c.fill();
-    c.fillStyle = rgba(col, Math.min(1, 0.3 + al));
-    starPath(c, x, y, 7, 2.9, 0); c.fill();
+    c.fillStyle = g; circle(c, x, y, rad * 4); c.fill();
+    c.fillStyle = rgba(col, Math.min(1, 0.25 + al));
+    starPath(c, x, y, rad * 2.4, rad * 1.0, 0); c.fill();
 
     // Message flash: once per MSG_PERIOD of the beacon's own clock, as received.
     const ph = (e.tau / MSG_PERIOD) % 1;
