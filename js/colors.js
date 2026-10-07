@@ -27,12 +27,48 @@ const Colors = (function () {
 
   const lerp = (a, b, t) => a.map((x, i) => Math.round(x + (b[i] - x) * t));
 
-  // Violet → lavender → white towards the ultraviolet (brighter, not darker).
-  const LAVENDER = [222, 212, 255];
+  // OKLCH → sRGB (0–255), reducing chroma until the colour fits the sRGB gamut.
+  function oklchRGB(L, C, hDeg) {
+    const enc = x => (x <= 0.0031308 ? 12.92 * x : 1.055 * Math.pow(x, 1 / 2.4) - 0.055);
+    for (let c = C; ; c *= 0.9) {
+      const h = hDeg * Math.PI / 180, A = c * Math.cos(h), B = c * Math.sin(h);
+      const l = (L + 0.3963377774 * A + 0.2158037573 * B) ** 3;
+      const m = (L - 0.1055613458 * A - 0.0638541728 * B) ** 3;
+      const q = (L - 0.0894841775 * A - 1.2914855480 * B) ** 3;
+      const rgb = [
+        4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * q,
+        -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * q,
+        -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * q,
+      ];
+      if (rgb.every(x => x >= -1e-4 && x <= 1 + 1e-4) || c < 1e-3) {
+        return rgb.map(x => Math.round(255 * enc(Math.min(1, Math.max(0, x)))));
+      }
+    }
+  }
+
+  // Spectral hue in OKLCH degrees, by wavelength (nm).
+  const HUE = [[380, 305], [420, 290], [450, 268], [475, 245], [495, 205], [515, 160], [545, 135],
+               [570, 112], [590, 82], [620, 52], [660, 36], [700, 29], [750, 26]];
+  function hueOf(nm) {
+    if (nm <= HUE[0][0]) return HUE[0][1];
+    for (let i = 1; i < HUE.length; i++) {
+      if (nm <= HUE[i][0]) {
+        const t = (nm - HUE[i - 1][0]) / (HUE[i][0] - HUE[i - 1][0]);
+        return HUE[i - 1][1] + t * (HUE[i][1] - HUE[i - 1][1]);
+      }
+    }
+    return HUE[HUE.length - 1][1];
+  }
+
+  // Perceptual colour for a received wavelength: the hue follows the spectrum, while the
+  // lightness only ever decreases with wavelength (white-hot UV → … → dark red), so a
+  // reddening source dims steadily instead of pulsing through bright cyan/yellow bands.
   function physicalRGB(nm) {
-    if (nm < 380) return lerp(LAVENDER, [255, 255, 255], Math.min(1, (380 - nm) / 130));
-    if (nm < 430) return lerp(LAVENDER, visibleRGB(430), (nm - 380) / 50);
-    if (nm < 750) return visibleRGB(nm);
+    if (nm < 750) {
+      const L = nm <= 300 ? 0.97 : nm <= 420 ? 0.97 - 0.15 * (nm - 300) / 120 : 0.82 - 0.22 * (nm - 420) / 330;
+      const C = nm <= 300 ? 0 : nm <= 440 ? 0.17 * (nm - 300) / 140 : 0.17;
+      return oklchRGB(L, C, hueOf(nm));
+    }
     if (nm < 1e6) {
       const t = Math.log10(nm / 750) / Math.log10(1e6 / 750);
       return lerp([150, 10, 10], [80, 30, 30], t);
@@ -67,5 +103,5 @@ const Colors = (function () {
     return (nm / 1e9).toPrecision(3) + ' m';
   }
 
-  return { visibleRGB, physicalRGB, falseRGB, rgb, band, formatLambda, STOPS };
+  return { visibleRGB, oklchRGB, physicalRGB, falseRGB, rgb, band, formatLambda, STOPS };
 })();
