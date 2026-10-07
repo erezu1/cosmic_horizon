@@ -34,17 +34,15 @@
     ui.speed = Math.pow(10, +$('speed').value);
     ui.dm = +$('dm').value;
     ui.m0 = +$('m0').value;
-    ui.mStars = +$('mStars').value;
     ui.ir = $('ir').checked;
     ui.oldH = $('oldH').checked;
     ui.stars = $('galaxies').checked;
-    $('speedVal').textContent = ui.speed.toFixed(2) + ' ℓ/s';
-    $('dmVal').textContent = ui.dm.toFixed(2) + ' /8G';
-    const pending = S && (Math.abs(ui.m0 - S.m0) > 1e-9 || Math.abs(ui.mStars - S.mStars) > 1e-9);
-    $('m0Val').textContent = ui.m0.toFixed(2) + ' /8G' + (pending ? ' · on reset' : '');
-    $('mStarsVal').textContent = ui.mStars.toFixed(2) + ' /8G' + (pending ? ' · on reset' : '');
+    $('speedVal').textContent = ui.speed.toFixed(2) + ' ℓ/c per s';
+    $('dmVal').textContent = ui.dm.toFixed(2) + ' c²/8G';
+    const pending = S && Math.abs(ui.m0 - S.m0) > 1e-9;
+    $('m0Val').textContent = ui.m0.toFixed(2) + ' c²/8G' + (pending ? ' · on reset' : '');
   }
-  for (const id of ['speed', 'dm', 'm0', 'mStars', 'ir', 'oldH', 'galaxies']) $(id).addEventListener('input', readUI);
+  for (const id of ['speed', 'dm', 'm0', 'ir', 'oldH', 'galaxies']) $(id).addEventListener('input', readUI);
 
   // ---------- state ----------
   let S = null;
@@ -62,10 +60,11 @@
 
   // Before τ = 0 you launched the stars in bursts. Each burst cost you a slice of mass,
   // radiated outward as a flash of light (an exact Vaidya shell); the stars are test particles.
+  const M_GALAXIES = 0.2;          // mass (c²/8G) you launched as galaxies before τ = 0
   const STAR_BURSTS = [-3.4, -2.6, -1.9, -1.3, -0.8, -0.4];   // your proper time (ℓ)
   function reset() {
     readUI();
-    const mStars = Math.min(ui.mStars, Math.max(0, 0.96 - ui.m0));
+    const mStars = Math.min(M_GALAXIES, Math.max(0, 0.96 - ui.m0));
     const st = new Spacetime(ui.m0 + mStars);
     const rnd = mulberry32(20261006);
     const sources = [];
@@ -94,17 +93,18 @@
       }
     }
     const playing = S ? S.playing : true;
-    S = { st, sources, tau: 0, u: 0, playing, m0: ui.m0, mStars: ui.mStars, nBeacons: 0, flashes: [], frame: 0, cone: null,
+    S = { st, sources, tau: 0, u: 0, playing, m0: ui.m0, nBeacons: 0, flashes: [], frame: 0, cone: null,
           oldHorizons,
-          ring: S ? S.ring : false, pen: { ver: -1 }, tailFrame: -1 };
+          pen: { ver: -1 }, tailFrame: -1 };
     readUI();
     step();
     updateList();
   }
 
-  function fire(phi, ring) {
+  // Every launch is a shell: RING_N beacons evenly spaced, at a random overall rotation.
+  function fire() {
     const st = S.st;
-    // What you launch carries the mass: a thin shell leaving with it (s-wave for one beacon).
+    // What you launch carries the mass: a thin shell leaving with the ring of beacons.
     // You can only give away mass you still have (the last launch takes the remainder).
     if (st.mNow <= 1e-9 && ui.dm > 0) {
       showHint('No mass left: you are empty de Sitter now', 2500);
@@ -114,7 +114,7 @@
     if (dm > 1e-9) { S.oldHorizons.push(st.aNow); st.addShell(S.u, dm); }
     const a = st.aR[st.region(S.u)];
     const v = V_LAUNCH, g = GAMMA_LAUNCH;
-    const n = ring ? RING_N : 1;
+    const n = RING_N, phi = Math.random() * TAU;
     for (let i = 0; i < n; i++) {
       const id = ++S.nBeacons;
       S.sources.push({
@@ -753,7 +753,7 @@
 
   // The hint at the top of the sky: shown for a while, only over the sky.
   let hintOn = false;
-  const defaultHint = () => S.ring ? 'Tap the sky to emit a shell of 12 beacons' : 'Tap the sky to launch a beacon';
+  const defaultHint = () => 'Tap the sky to emit a shell of 12 beacons';
   function updateHint() { setShown($('hint'), hintOn && view !== 'penrose'); }
   function showHint(text, ms) {
     clearTimeout(showHint._t);
@@ -774,7 +774,7 @@
     const { cx, cy } = skyGeom();
     const x = ev.clientX - rect.left, y = ev.clientY - rect.top;
     if (Math.hypot(x - cx, y - cy) < 2) return;
-    fire(Math.atan2(-(y - cy), x - cx), S.ring || ev.shiftKey);
+    fire();
   });
 
   function setPlaying(p) {
@@ -783,11 +783,6 @@
     $('play').setAttribute('aria-label', p ? 'Pause' : 'Play');
   }
   $('play').addEventListener('click', () => setPlaying(!S.playing));
-  $('ring').addEventListener('click', () => {
-    S.ring = !S.ring;
-    $('ring').setAttribute('aria-pressed', String(S.ring));
-    if (hintOn) $('hint').textContent = defaultHint();
-  });
   $('reset').addEventListener('click', () => {
     reset();
     showHint(defaultHint(), 7000);
@@ -896,6 +891,6 @@
   syncSegs(true);
   // The opening hint fades out after 7 s (or on the first launch).
   showHint(defaultHint(), 7000);
-  window.cosmicHorizon = { state: () => S, fire: (phi, ring) => fire(phi, !!ring) };
+  window.cosmicHorizon = { state: () => S, fire: () => fire() };
   requestAnimationFrame(frame);
 })();

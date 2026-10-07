@@ -11,13 +11,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="style.css?v=61">
+<link rel="stylesheet" href="style.css?v=62">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></symbol>
   <symbol id="i-pause" viewBox="0 0 24 24"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></symbol>
-  <symbol id="i-ring" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12.00" cy="6.80" r="1.35" fill="currentColor" stroke="none"/><path d="M12.00 4.70L12.00 1.40M13.20 2.90L12.00 1.40L10.80 2.90"/><circle cx="7.50" cy="9.40" r="1.35" fill="currentColor" stroke="none"/><path d="M5.68 8.35L2.82 6.70M4.72 6.41L2.82 6.70L3.52 8.49"/><circle cx="7.50" cy="14.60" r="1.35" fill="currentColor" stroke="none"/><path d="M5.68 15.65L2.82 17.30M3.52 15.51L2.82 17.30L4.72 17.59"/><circle cx="12.00" cy="17.20" r="1.35" fill="currentColor" stroke="none"/><path d="M12.00 19.30L12.00 22.60M10.80 21.10L12.00 22.60L13.20 21.10"/><circle cx="16.50" cy="14.60" r="1.35" fill="currentColor" stroke="none"/><path d="M18.32 15.65L21.18 17.30M19.28 17.59L21.18 17.30L20.48 15.51"/><circle cx="16.50" cy="9.40" r="1.35" fill="currentColor" stroke="none"/><path d="M18.32 8.35L21.18 6.70M20.48 8.49L21.18 6.70L19.28 6.41"/></g></symbol>
   <symbol id="i-reset" viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 2.1-5M5 4.5V8h3.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="i-gauge" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/></g></symbol>
   <symbol id="i-list" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 7h11M9 12h11M9 17h11"/><circle cx="5" cy="7" r="1" fill="currentColor"/><circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="5" cy="17" r="1" fill="currentColor"/></g></symbol>
@@ -52,8 +51,8 @@
       <canvas id="penrose" aria-label="Penrose diagram" hidden></canvas>
 
       <div id="hud" class="glass" hidden>
-        <div><span class="k">τ</span><span class="v" id="hTau"></span><span class="u">ℓ · your clock</span></div>
-        <div><span class="k">M</span><span class="v" id="hM"></span><span class="u">/8G</span></div>
+        <div><span class="k">τ</span><span class="v" id="hTau"></span><span class="u">ℓ/c · your clock</span></div>
+        <div><span class="k">M</span><span class="v" id="hM"></span><span class="u">c²/8G</span></div>
         <div><span class="k">r꜀</span><span class="v" id="hRc"></span><span class="u">ℓ</span></div>
         <div><span class="k">edge</span><span class="v" id="hEdge"></span><span class="u">ℓ · visible</span></div>
         <div><span class="k">S</span><span class="v" id="hS"></span><span class="u">· S<sub>dS</sub></span></div>
@@ -76,7 +75,6 @@
 
     <div class="toolbar glass">
       <button class="tool" id="play" aria-label="Pause"><svg><use href="#i-pause"/></svg></button>
-      <button class="tool" id="ring" aria-pressed="false" aria-label="Shell mode: launch a full ring" title="Shell mode: each tap emits a circular shell of 12 beacons"><svg><use href="#i-ring"/></svg><span>Shell</span></button>
       <button class="tool" id="reset" aria-label="Reset"><svg><use href="#i-reset"/></svg></button>
       <div class="seg" role="tablist" aria-label="View">
         <button role="tab" id="vSky" aria-selected="true">Sky</button>
@@ -90,12 +88,10 @@
     <header><h2>Settings</h2><button class="icon sm" data-close aria-label="Close"><svg><use href="#i-close"/></svg></button></header>
     <label class="field"><span>Time speed <output id="speedVal"></output></span>
       <input type="range" id="speed" min="-1.6" max="0.4" step="0.01" value="-0.85"></label>
-    <label class="field"><span>Mass per launch ΔM <output id="dmVal"></output></span>
+    <label class="field"><span>Mass per shell ΔM <output id="dmVal"></output></span>
       <input type="range" id="dm" min="0" max="0.25" step="0.01" value="0.05"></label>
-    <label class="field"><span>Your mass at start M₀ <output id="m0Val"></output></span>
+    <label class="field"><span>Your mass M₀ <output id="m0Val"></output></span>
       <input type="range" id="m0" min="0" max="0.95" step="0.01" value="0.64"></label>
-    <label class="field"><span>Mass you spent on galaxies <output id="mStarsVal"></output></span>
-      <input type="range" id="mStars" min="0" max="0.3" step="0.01" value="0.2"></label>
     <div class="switches">
       <label class="switch"><input type="checkbox" id="ir"><span></span>Infrared camera</label>
       <label class="switch"><input type="checkbox" id="oldH"><span></span>Old horizons</label>
@@ -113,12 +109,12 @@
 
     <h3>The spacetime</h3>
     <p>You sit on a point mass $M$ in 2+1 dimensional de Sitter space. As you radiate mass outward, the geometry is the outgoing Vaidya–de Sitter solution, which is exact:</p>
-    $$\begin{gathered} ds^2 = -f\,du^2 - 2\,du\,dr + r^2 d\phi^2,\\ f(u,r) = 1 - 8GM(u) - \frac{r^2}{\ell^2}. \end{gathered}$$
+    $$\begin{gathered} ds^2 = -f\,du^2 - 2\,du\,dr + r^2 d\phi^2,\\ f(u,r) = 1 - \frac{8GM(u)}{c^2} - \frac{r^2}{\ell^2}. \end{gathered}$$
     <p>Here $u$ is retarded time and $r$ is the areal radius (circumference$/2\pi$). In three dimensions a point mass makes no black hole. It makes a cone with deficit angle $2\pi\bigl(1-\sqrt{1-8GM}\bigr)$, and your cosmological horizon sits at</p>
-    $$r_c = \ell\sqrt{1-8GM},\qquad \frac{S}{S_{\mathrm{dS}}} = \frac{r_c}{\ell}.$$
+    $$r_c = \ell\sqrt{1-8GM/c^2},\qquad \frac{S}{S_{\mathrm{dS}}} = \frac{r_c}{\ell}.$$
 
     <h3>Units</h3>
-    <p>Lengths and times are in units of $\ell$, with $c=1$. In 2+1 dimensions $G$ has units of 1/mass, so masses are given in units of $1/8G$. The maximum mass is $M = 1/8G$: the deficit reaches $2\pi$ and the horizon shrinks to zero. $M=0$ is empty de Sitter, with $r_c=\ell$.</p>
+    <p>Lengths are in units of $\ell$ and times in units of $\ell/c$. In 2+1 dimensions $GM/c^2$ is dimensionless (a deficit angle), so masses are given in units of $c^2/8G$. The maximum mass is $M = c^2/8G$: the deficit reaches $2\pi$ and the horizon shrinks to zero. $M=0$ is empty de Sitter, with $r_c=\ell$. Elsewhere we write $8GM$ for $8GM/c^2$.</p>
 
     <h3>The sky</h3>
     <p>Every object is drawn where it was when it emitted the light reaching you <em>now</em>, i.e. on your past light cone, at its areal radius.</p>
@@ -144,8 +140,8 @@
     <p><b>Now</b> (the default) applies $U\to U e^{-\tau/\ell},\ V\to V e^{\tau/\ell}$, a translation in static time that leaves your worldline and $\mathscr{I}^+$ fixed. The present sits mid-left, and the earlier history is squeezed against the past horizon. Once you have radiated all your mass, the neighbourhood of now is visibly the static patch of empty de Sitter.</p>
 
     <h3>Launching</h3>
-    <p>Everything you launch leaves at $v = 0.999c$ and carries its share of your mass $\Delta M$. At that speed the mass travels with the object as a thin null shell (the exact Vaidya solution, up to $1-v = 0.1\%$), while the object can still send light back to you. This is exact for a Shell launch; a single beacon's mass is spread over a ring (s-wave approximation). Brightness is schematic.</p>
-    <p><b>The galaxies came from you.</b> You started heavier, with mass $M_0 + M_\star$. Before $\tau = 0$ you launched the galaxies in six bursts, at $0.999c$ like your beacons, each burst carrying $M_\star/6$ of your mass. Like beacons, they transmit very blue light, tuned so you would have seen them in the visible at launch. That is why the game opens with a ring of older, smaller horizons and a visible edge still catching up with $r_c$.</p>
+    <p>Everything you launch leaves at $v = 0.999c$ and carries its share of your mass $\Delta M$. At that speed the mass travels with the object as a thin null shell (the exact Vaidya solution, up to $1-v = 0.1\%$), while the object can still send light back to you. Each tap launches a shell of 12 beacons, evenly spaced at a random rotation, so the mass leaves as a ring: the exact circularly symmetric case. Brightness is schematic.</p>
+    <p><b>The galaxies came from you.</b> You started heavier, with mass $M_0 + M_\star$, where $M_\star = 0.2\,c^2/8G$. Before $\tau = 0$ you launched the galaxies in six bursts, at $0.999c$ like your beacons, each burst carrying $M_\star/6$ of your mass. Like beacons, they transmit very blue light, tuned so you would have seen them in the visible at launch. That is why the game opens with a ring of older, smaller horizons and a visible edge still catching up with $r_c$.</p>
 
     <h3>Things to notice</h3>
     <ul>
