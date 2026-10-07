@@ -16,11 +16,11 @@
   // Drawn thickness along the line of sight: the true flattening f·u̇ spans several decades
   // (≈1/50 … 0 at 0.999c), so it is shown on a log scale: 1 → 1, 1/1000 and below → 0.2.
   const drawnSquash = q => 0.2 + 0.8 * Math.min(1, Math.max(0, 1 + Math.log10(Math.max(Math.abs(q), 1e-12)) / 3.5));
-  const GALAXY_GLOW = { r: 1.3, a: 0.18 }, BEACON_GLOW = { r: 2.4, a: 0.55 };   // halo radius (× iconR), strength
+  const GALAXY_GLOW = { r: 1.3, a: 0.18 }, BEACON_GLOW = { r: 1.9, a: 0.5 };   // halo radius (× iconR), strength
   // Outer radius of every galaxy and beacon icon: fixed on a given screen (brightness only fades
   // it), scaled with the size of the sky so icons keep their proportions on wide screens.
   let iconR = 6.5;
-  const BEACON_FRAC = 0.58;       // beacon ball radius as a fraction of iconR
+  const BEACON_FRAC = 0.4;        // beacon ball radius as a fraction of iconR
   const BURST_TIME = 0.2;        // each pre-game star burst lasts this long (ℓ)…
   const BURST_STEPS = 8;         // …as this many sub-launches, each star carrying its share of the mass
   const RING_N = 12;
@@ -397,14 +397,10 @@
       if (s.kind === 'star' && !ui.stars) continue;
       const x = X(e.lam);
       if (x < x0 || x > x1) continue;
-      if (s.kind === 'star') {
-        c.fillStyle = `rgba(230,236,255,${0.25 + 0.5 * brightness(e.z1, e.lam)})`;
-        circle(c, x, top + 4 + s.jit * (bot - top - 8), 1.3); c.fill();
-      } else {
-        const y = top + 6 + s.jit * (bot - top - 12);
-        c.fillStyle = PEN.beacon;
-        c.beginPath(); c.moveTo(x, y - 5); c.lineTo(x + 4, y + 3); c.lineTo(x - 4, y + 3); c.closePath(); c.fill();
-      }
+      // Same dot for galaxies and beacons; beacons keep their orange.
+      const a = 0.25 + 0.5 * brightness(e.z1, e.lam);
+      c.fillStyle = s.kind === 'star' ? `rgba(230,236,255,${a})` : PEN.beacon;
+      circle(c, x, top + 4 + s.jit * (bot - top - 8), 1.3); c.fill();
     }
   }
 
@@ -572,6 +568,14 @@
       drawWorldline(c, g, s, PEN.beacon, PEN.beaconFuture);
     }
 
+    // Your light cones now.
+    c.strokeStyle = PEN.past;
+    c.lineWidth = 3;
+    { const [x1, y1] = toXY(g, Pn, Qn), [x2, y2] = toXY(g, -HALF, Qn); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
+    c.strokeStyle = PEN.future;
+    c.lineWidth = 2.4;
+    { const [x1, y1] = toXY(g, Pn, Qn), [x2, y2] = toXY(g, Pn, HALF - Pn); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
+
     // Apparent horizon (dashed) and event horizon V = 0 (solid): the same hot colour.
     c.strokeStyle = PEN.horizonDim;
     c.lineWidth = 2;
@@ -581,14 +585,6 @@
     c.strokeStyle = PEN.horizon;
     c.lineWidth = 3;
     { const [x1, y1] = toXY(g, HALF, 0), [x2, y2] = toXY(g, -HALF, 0); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
-
-    // Your light cones now.
-    c.strokeStyle = PEN.past;
-    c.lineWidth = 3;
-    { const [x1, y1] = toXY(g, Pn, Qn), [x2, y2] = toXY(g, -HALF, Qn); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
-    c.strokeStyle = PEN.future;
-    c.lineWidth = 2.4;
-    { const [x1, y1] = toXY(g, Pn, Qn), [x2, y2] = toXY(g, Pn, HALF - Pn); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
 
     // The visible edge: where your past light cone crosses the apparent-horizon staircase. After a
     // launch this is on a jump of the staircase (a shell), between the old and the new r_c.
@@ -635,8 +631,6 @@
       c.restore();
     };
     const [xn, yn] = toXY(g, Pn, Qn);
-    c.fillStyle = PEN.now; c.strokeStyle = PEN.halo; c.lineWidth = 2.5;
-    circle(c, xn, yn, 5.5); c.fill(); c.stroke();
     label('Now', xn - 10, yn + 4, PEN.now, 'right', 0, 13);
     // Inside each triangle: the cones are at 45°, so keep the text below/above the diagonal.
     if (yn + 66 < bot - 4) label('Past', xn + 8, yn + 62, PEN.past);
@@ -657,6 +651,10 @@
     c.translate(g.cx + HALF * g.s + 12, g.cy); c.rotate(HALF);
     c.fillText('antipode', 0, 0);
     c.restore();
+
+    // The Now dot goes on top of everything.
+    c.fillStyle = PEN.now; c.strokeStyle = PEN.halo; c.lineWidth = 2.5;
+    circle(c, xn, yn, 5.5); c.fill(); c.stroke();
   }
 
   // ---------- beacon list ----------
