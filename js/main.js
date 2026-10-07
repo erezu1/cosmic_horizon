@@ -376,7 +376,7 @@
   }
 
   // ---------- spectrum strip ----------
-  const L0 = 2, L1 = 10;   // log10(λ / nm): 100 nm … 10 m
+  const L0 = 2, L1 = 8.3;  // log10(λ / nm): 100 nm … 20 cm (sources are gone by then)
   function drawSpectrum() {
     const { w, h, dpr } = fit(spec);
     const c = cP;
@@ -394,7 +394,7 @@
       }
       c.fillStyle = g; c.fillRect(x0, top, x1 - x0, bot - top);
     } else {
-      const bands = [[750, 1e6, [90, 20, 25]], [1e6, 1e9, [45, 50, 70]], [1e9, 1e10, [30, 32, 45]]];
+      const bands = [[750, 1e6, [90, 20, 25]], [1e6, 2e8, [45, 50, 70]]];
       for (const [a, b, col] of bands) { c.fillStyle = rgba(col, 0.45); c.fillRect(X(a), top, X(b) - X(a), bot - top); }
       // UV through visible, with the same colours the sky uses (UV fades to white).
       const g = c.createLinearGradient(X(100), 0, X(750), 0);
@@ -407,10 +407,10 @@
     c.font = '400 10.5px "Space Mono", monospace';
     c.textAlign = 'center';
     c.fillStyle = 'rgba(200,210,240,0.75)';
-    const lbl = [['UV', 200], ['vis', 530], ['infrared', 2.5e4], ['microwave', 3e7], ['radio', 3e9]];
+    const lbl = [['UV', 200], ['vis', 530], ['infrared', 2.5e4], ['microwave', 1e7]];
     for (const [t, nm] of lbl) c.fillText(t, X(nm), 11);
     c.fillStyle = 'rgba(138,150,187,0.8)';
-    for (const [t, nm] of [['1 µm', 1e3], ['1 mm', 1e6], ['1 m', 1e9]]) {
+    for (const [t, nm] of [['1 µm', 1e3], ['1 mm', 1e6], ['10 cm', 1e8]]) {
       c.fillRect(X(nm), bot, 1, 3);
       c.fillText(t, X(nm), h - 3);
     }
@@ -421,9 +421,12 @@
       if (s.kind === 'star' && !ui.stars) continue;
       const x = X(e.lam);
       if (x < x0 || x > x1) continue;
-      // Same dot for galaxies and beacons; beacons keep their orange.
-      const a = 0.25 + 0.5 * brightness(e.z1, e.lam);
-      c.fillStyle = s.kind === 'star' ? `rgba(230,236,255,${a})` : PEN.beacon;
+      // Same dot for galaxies and beacons; beacons keep their orange. Dots fade out smoothly over
+      // the last three decades of redshift, reaching zero exactly where the source is dropped.
+      const zFade = Math.min(1, Math.max(0, (Math.log10(Z_LOST) - Math.log10(e.z1)) / 3));
+      const a = (0.3 + 0.6 * brightness(e.z1, e.lam)) * zFade;
+      if (a <= 0.004) continue;
+      c.fillStyle = s.kind === 'star' ? `rgba(230,236,255,${a})` : `rgba(255,107,53,${zFade})`;
       circle(c, x, top + 4 + s.jit * (bot - top - 8), 1.3); c.fill();
     }
   }
