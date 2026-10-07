@@ -107,11 +107,7 @@
     // What you launch carries the mass: a thin shell leaving with it (s-wave for one beacon).
     // You can only give away mass you still have (the last launch takes the remainder).
     if (st.mNow <= 1e-9 && ui.dm > 0) {
-      const hint = $('hint');
-      hint.textContent = 'No mass left: you are empty de Sitter now';
-      hint.classList.remove('hidden');
-      clearTimeout(fire._t);
-      fire._t = setTimeout(() => hint.classList.add('hidden'), 2500);
+      showHint('No mass left: you are empty de Sitter now', 2500);
       return;
     }
     const dm = Math.min(ui.dm, st.mNow);
@@ -130,7 +126,7 @@
       });
     }
     S.flashes.push({ t: performance.now(), dm });
-    $('hint').classList.add('hidden');
+    showHint(null);
     step();
     updateList();
   }
@@ -251,7 +247,7 @@
 
     // Sources.
     if (ui.stars) for (const s of S.sources) if (s.kind === 'star') drawStar(c, s, cx, cy, R);
-    labelsOn = !$('beaconSheet').hidden;
+    labelsOn = isShown($('beaconSheet'));
     for (const s of S.sources) if (s.kind === 'beacon') drawBeacon(c, s, cx, cy, R);
 
     // You: a little rocket, larger the more mass you still carry.
@@ -414,9 +410,9 @@
 
   // ---------- Penrose diagram ----------
   function penGeom() {
-    const w = pen.clientWidth, h = pen.clientHeight;
+    const w = pen.clientWidth, h = pen.clientHeight - 92;   // bottom: legend + Now/Full overlay
     const pad = 46;   // room for the "Now" label left of the diagram
-    return { cx: w / 2, cy: h / 2, s: (Math.min(w, h) / 2 - pad) / HALF };
+    return { cx: w / 2, cy: h / 2 + 6, s: (Math.min(w, h) / 2 - pad) / HALF };
   }
   const PEN = {
     space: '#0e1626', frame: 'rgba(243,234,216,0.45)', halo: '#0b1120', muted: '#9fb0c8',
@@ -695,6 +691,50 @@
     $('hS').textContent = a.toFixed(3);
   }
 
+  // ---------- transitions: one show/hide and one option selector, shared timing ----------
+  const FX_MS = 220;                                       // the one duration (also --t in CSS)
+  document.documentElement.style.setProperty('--t', FX_MS + 'ms');
+  const isShown = el => !el.hidden && !el.classList.contains('fx-out');
+  // Show or hide any panel, overlay or view: fade + slide in, the same in reverse on the way out.
+  function setShown(el, on) {
+    if (on === isShown(el)) return;
+    clearTimeout(el._fxT);
+    el.classList.remove('fx-in', 'fx-out');
+    void el.offsetWidth;                                   // restart the animation
+    if (on) { el.hidden = false; el.classList.add('fx-in'); }
+    else {
+      el.classList.add('fx-out');
+      el._fxT = setTimeout(() => { el.hidden = true; el.classList.remove('fx-out'); }, FX_MS);
+    }
+  }
+  // Option groups: slide the selector to the chosen option (instantly on first layout/resize).
+  const segs = [...document.querySelectorAll('.seg')];
+  for (const sg of segs) { const t = document.createElement('span'); t.className = 'seg-thumb'; sg.prepend(t); }
+  function syncSeg(sg, instant) {
+    const sel = sg.querySelector('[aria-selected="true"], [aria-pressed="true"]');
+    const th = sg.querySelector('.seg-thumb');
+    if (!sel || !th || !sel.offsetWidth) return;
+    if (instant) th.style.transition = 'none';
+    th.style.width = sel.offsetWidth + 'px';
+    th.style.transform = `translateX(${sel.offsetLeft}px)`;
+    if (instant) { void th.offsetWidth; th.style.transition = ''; }
+  }
+  const syncSegs = instant => segs.forEach(sg => syncSeg(sg, instant));
+  window.addEventListener('resize', () => syncSegs(true));
+  if (document.fonts) document.fonts.ready.then(() => syncSegs(true));
+
+  // The hint at the top of the sky: shown for a while, only over the sky.
+  let hintOn = false;
+  const defaultHint = () => S.ring ? 'Tap the sky to emit a shell of 12 beacons' : 'Tap the sky to launch a beacon';
+  function updateHint() { setShown($('hint'), hintOn && view !== 'penrose'); }
+  function showHint(text, ms) {
+    clearTimeout(showHint._t);
+    hintOn = text != null;
+    if (hintOn) $('hint').textContent = text;
+    updateHint();
+    if (hintOn && ms) showHint._t = setTimeout(() => { hintOn = false; updateHint(); }, ms);
+  }
+
   // ---------- events ----------
   const store = {
     get(k) { try { return localStorage.getItem('ch.' + k); } catch (e) { return null; } },
@@ -718,12 +758,11 @@
   $('ring').addEventListener('click', () => {
     S.ring = !S.ring;
     $('ring').setAttribute('aria-pressed', String(S.ring));
-    $('hint').textContent = S.ring ? 'Tap the sky to emit a shell of 12 beacons' : 'Tap the sky to launch a beacon';
+    if (hintOn) $('hint').textContent = defaultHint();
   });
   $('reset').addEventListener('click', () => {
     reset();
-    $('hint').textContent = S.ring ? 'Tap the sky to emit a shell of 12 beacons' : 'Tap the sky to launch a beacon';
-    $('hint').classList.remove('hidden');
+    showHint(defaultHint(), 7000);
   });
 
   let view = 'sky';
@@ -732,6 +771,7 @@
     penMode = m;
     $('pFull').setAttribute('aria-pressed', String(m === 'full'));
     $('pNow').setAttribute('aria-pressed', String(m === 'now'));
+    syncSeg($('penZoom'));
     store.set('penMode', m);
   }
   $('pFull').addEventListener('click', () => setPenMode('full'));
@@ -745,10 +785,11 @@
     $('vBoth').setAttribute('aria-selected', String(v === 'both'));
     $('vPen').setAttribute('aria-selected', String(v === 'penrose'));
     $('view').classList.toggle('both', v === 'both');
-    sky.hidden = !showSky; pen.hidden = !showPen;
-    spec.hidden = !showSky; $('legend').hidden = !showPen;
-    $('hint').style.display = showSky ? '' : 'none';
-    $('penZoom').hidden = !showPen;
+    syncSeg($('vSky').parentElement);
+    setShown(sky, showSky); setShown(pen, showPen);
+    setShown($('legend'), showPen); setShown($('penZoom'), showPen);
+    if (showPen) syncSeg($('penZoom'), true);
+    updateHint();
     store.set('view', v);
   }
   $('vSky').addEventListener('click', () => setView('sky'));
@@ -757,33 +798,29 @@
   $('vPen').addEventListener('click', () => setView('penrose'));
 
   function setHUD(on) {
-    $('hud').hidden = !on;
+    setShown($('hud'), on);
     $('hudBtn').setAttribute('aria-pressed', String(on));
     store.set('hud', on ? '1' : '0');
     updateHUD();
   }
-  $('hudBtn').addEventListener('click', () => setHUD($('hud').hidden));
+  $('hudBtn').addEventListener('click', () => setHUD(!isShown($('hud'))));
 
   const sheetBtns = [...document.querySelectorAll('[data-sheet]')];
   function closeSheets() {
     for (const b of sheetBtns) {
       const el = $(b.dataset.sheet);
       b.setAttribute('aria-expanded', 'false');
-      if (el.hidden || el.classList.contains('closing')) continue;
-      el.classList.add('closing');
-      el._t = setTimeout(() => { el.hidden = true; el.classList.remove('closing'); }, 180);
+      setShown(el, false);
     }
   }
   for (const b of sheetBtns) {
     b.setAttribute('aria-expanded', 'false');
     b.addEventListener('click', ev => {
       ev.stopPropagation();
-      const el = $(b.dataset.sheet), open = el.hidden || el.classList.contains('closing');
+      const el = $(b.dataset.sheet), open = !isShown(el);
       closeSheets();
       if (open) {
-        clearTimeout(el._t);
-        el.classList.remove('closing');
-        el.hidden = false; b.setAttribute('aria-expanded', 'true');
+        setShown(el, true); b.setAttribute('aria-expanded', 'true');
         if (b.dataset.sheet === 'beaconSheet') updateList();
         if (b.dataset.sheet === 'aboutSheet') renderMath(el);
       }
@@ -814,20 +851,22 @@
     last = now;
     if (S.playing) S.tau += ui.speed * dt;
     step();
-    if (view !== 'penrose') { drawSky(now); drawSpectrum(); }
+    if (view !== 'penrose') drawSky(now);
     if (view !== 'sky') drawPenrose();
+    drawSpectrum();
     if (S.frame % 6 === 0) updateHUD();
-    if (S.frame % 10 === 0 && !$('beaconSheet').hidden) updateList();
+    if (S.frame % 10 === 0 && isShown($('beaconSheet'))) updateList();
     S.frame++;
     requestAnimationFrame(frame);
   }
 
   reset();
-  // The opening hint fades out after 7 s (or on the first launch).
-  setTimeout(() => $('hint').classList.add('hidden'), 7000);
   { const v = store.get('view'); setView(v === 'penrose' || v === 'sky' || v === 'both' ? v : (wideMQ.matches ? 'both' : 'sky')); }
   setHUD(store.get('hud') === '1');
   setPenMode(penMode);
+  syncSegs(true);
+  // The opening hint fades out after 7 s (or on the first launch).
+  showHint(defaultHint(), 7000);
   window.cosmicHorizon = { state: () => S, fire: (phi, ring) => fire(phi, !!ring) };
   requestAnimationFrame(frame);
 })();

@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="style.css?v=53">
+<link rel="stylesheet" href="style.css?v=55">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -60,20 +60,20 @@
         <div><span class="k">S/S<sub>dS</sub></span><span class="v" id="hS"></span><span class="u"></span></div>
       </div>
 
-      <div id="penZoom" class="chips glass" hidden>
+      <div id="penZoom" class="seg glass" hidden>
         <button id="pNow" aria-pressed="true">Now</button>
         <button id="pFull" aria-pressed="false">Full</button>
       </div>
 
+      <ul id="legend" class="legend" hidden>
+        <li><i style="background:#b9a7ff"></i>galaxies</li>
+        <li><i style="background:#ff6b35"></i>beacons</li>
+        <li style="color:#ff5c8a"><i class="dash"></i><span style="color:#9fb0c8">apparent horizon</span></li>
+      </ul>
       <div id="hint" class="glass">Tap the sky to launch a beacon</div>
     </div>
 
     <canvas id="spectrum" aria-label="Received wavelengths"></canvas>
-    <ul id="legend" class="legend" hidden>
-      <li><i style="background:#b9a7ff"></i>galaxies</li>
-      <li><i style="background:#ff6b35"></i>beacons</li>
-      <li style="color:#ff5c8a"><i class="dash"></i><span style="color:#9fb0c8">apparent horizon</span></li>
-    </ul>
 
     <div class="toolbar glass">
       <button class="tool" id="play" aria-label="Pause"><svg><use href="#i-pause"/></svg></button>
@@ -160,8 +160,8 @@
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="js/physics.js?v=53"></script>
-<script src="js/colors.js?v=53"></script>
-<script src="js/main.js?v=53"></script>
+<script src="js/physics.js?v=55"></script>
+<script src="js/colors.js?v=55"></script>
+<script src="js/main.js?v=55"></script>
 </body>
 </html>
