@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Style Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Instrument+Sans:wght@400;500;600&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Chakra+Petch:wght@400;500;600&family=Sora:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #e9e7e1; color: #1d1d1b; font: 15px/1.5 "Instrument Sans", system-ui, sans-serif; }
+  header.lab { max-width: 1280px; margin: 0 auto; padding: 28px 20px 8px; }
+  header.lab h1 { margin: 0; font-size: 22px; font-weight: 600; }
+  header.lab p { margin: 4px 0 0; color: #5d5b55; max-width: 760px; }
+  .grid { max-width: 1280px; margin: 0 auto; padding: 16px 20px 40px; display: grid; gap: 22px; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); }
+  .card { border-radius: 22px; overflow: hidden; display: flex; flex-direction: column; }
+  .meta { padding: 14px 18px 4px; }
+  .meta h2 { margin: 0; font-size: 18px; }
+  .meta p { margin: 4px 0 10px; font-size: 13px; opacity: 0.75; }
+  .phone { margin: 0 14px 14px; border-radius: 18px; padding: 12px; display: grid; gap: 10px; }
+  .row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
+  .phone, .card { min-width: 0; }
+  .grow { flex: 1; min-width: 0; }
+  svg.i { width: 18px; height: 18px; display: block; }
+  .sky { width: 100%; max-height: 260px; display: block; }
+  .pen { width: 100%; display: block; }
+  .tag { font-size: 12px; }
+
+  /* ---------- 1. Mission control (Outer Wilds / NASA-punk) ---------- */
+  .mc { background: #121a2b; color: #f3ead8; }
+  .mc .phone { background: #0b1120; border: 1.5px solid #2a3550; }
+  .mc .title { font: 700 15px "Space Mono", monospace; letter-spacing: 0.04em; text-transform: uppercase; }
+  .mc .sub { font: 400 11px "Space Mono", monospace; color: #9fb0c8; letter-spacing: 0.06em; text-transform: uppercase; }
+  .mc .ib { width: 38px; height: 38px; display: grid; place-items: center; border: 1.5px solid #3a4766; border-radius: 10px; color: #f3ead8; background: transparent; }
+  .mc .btn { height: 42px; padding: 0 14px; display: flex; align-items: center; gap: 8px; border: 1.5px solid #f3ead8; border-radius: 10px; font: 700 12px "Space Mono", monospace; letter-spacing: 0.08em; text-transform: uppercase; color: #f3ead8; background: transparent; }
+  .mc .btn.primary { background: #ff6b35; border-color: #ff6b35; color: #0b1120; }
+  .mc .seg { display: flex; border: 1.5px solid #3a4766; border-radius: 10px; overflow: hidden; }
+  .mc .seg span { padding: 9px 12px; font: 700 11px "Space Mono", monospace; letter-spacing: 0.08em; text-transform: uppercase; color: #9fb0c8; }
+  .mc .seg span.on { background: #f3ead8; color: #0b1120; }
+  .mc .panel { border: 1.5px solid #3a4766; border-radius: 12px; padding: 12px; display: grid; gap: 10px; }
+  .mc .label { font: 400 11px "Space Mono", monospace; text-transform: uppercase; letter-spacing: 0.08em; color: #9fb0c8; }
+  .mc .val { font: 700 12px "Space Mono", monospace; color: #ff6b35; }
+  .mc .track { height: 4px; background: #3a4766; border-radius: 2px; position: relative; }
+  .mc .track b { position: absolute; left: 0; top: 0; bottom: 0; width: 38%; background: #ff6b35; border-radius: 2px; }
+  .mc .track i { position: absolute; left: 38%; top: 50%; width: 14px; height: 14px; margin: -7px; border-radius: 50%; background: #f3ead8; }
+  .mc .sw { width: 34px; height: 18px; border-radius: 9px; border: 1.5px solid #f3ead8; position: relative; }
+  .mc .sw i { position: absolute; right: 2px; top: 2px; width: 11px; height: 11px; border-radius: 50%; background: #ff6b35; }
+
+  /* ---------- 2. Studio (Linear / Vercel / Raycast) ---------- */
+  .st { background: #f7f7f8; color: #0a0a0b; }
+  .st .phone { background: #0a0a0b; color: #ededef; border: 1px solid #1f1f23; }
+  .st .title { font: 600 15px "Geist", sans-serif; letter-spacing: -0.01em; }
+  .st .sub { font: 400 12px "Geist", sans-serif; color: #8a8a93; }
+  .st .ib { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 9px; background: #161619; border: 1px solid #26262b; color: #c9c9d1; }
+  .st .btn { height: 40px; padding: 0 14px; display: flex; align-items: center; gap: 8px; border-radius: 10px; background: #161619; border: 1px solid #26262b; font: 500 13px "Geist", sans-serif; color: #ededef; }
+  .st .btn.primary { background: #ededef; color: #0a0a0b; border-color: #ededef; }
+  .st .seg { display: flex; padding: 3px; background: #161619; border: 1px solid #26262b; border-radius: 10px; }
+  .st .seg span { padding: 6px 12px; border-radius: 7px; font: 500 13px "Geist", sans-serif; color: #8a8a93; }
+  .st .seg span.on { background: #2a2a30; color: #ededef; box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); }
+  .st .panel { background: #111113; border: 1px solid #26262b; border-radius: 12px; padding: 12px; display: grid; gap: 10px; }
+  .st .label { font: 400 13px "Geist", sans-serif; color: #b4b4bd; }
+  .st .val { font: 500 12px "Geist Mono", monospace; color: #ededef; }
+  .st .track { height: 4px; background: #26262b; border-radius: 2px; position: relative; }
+  .st .track b { position: absolute; left: 0; top: 0; bottom: 0; width: 38%; background: #7c5cff; border-radius: 2px; }
+  .st .track i { position: absolute; left: 38%; top: 50%; width: 14px; height: 14px; margin: -7px; border-radius: 50%; background: #ededef; }
+  .st .sw { width: 32px; height: 18px; border-radius: 9px; background: #7c5cff; position: relative; }
+  .st .sw i { position: absolute; right: 2px; top: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
+
+  /* ---------- 3. HUD (sci-fi game) ---------- */
+  .hud { background: #070b14; color: #d8f6ff; }
+  .hud .phone { background: #03060c; border: 1px solid #12324a; position: relative; }
+  .hud .phone::before, .hud .phone::after { content: ""; position: absolute; width: 14px; height: 14px; border: 2px solid #4ef0ff; }
+  .hud .phone::before { top: -1px; left: -1px; border-right: 0; border-bottom: 0; }
+  .hud .phone::after { bottom: -1px; right: -1px; border-left: 0; border-top: 0; }
+  .hud .title { font: 600 16px "Chakra Petch", sans-serif; letter-spacing: 0.14em; text-transform: uppercase; }
+  .hud .sub { font: 400 11px "Geist Mono", monospace; color: #4ef0ff; letter-spacing: 0.12em; }
+  .hud .ib { width: 38px; height: 38px; display: grid; place-items: center; color: #4ef0ff; background: rgba(78,240,255,0.06); clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); box-shadow: inset 0 0 0 1px rgba(78,240,255,0.45); }
+  .hud .btn { height: 42px; padding: 0 14px; display: flex; align-items: center; gap: 8px; font: 600 13px "Chakra Petch", sans-serif; letter-spacing: 0.14em; text-transform: uppercase; color: #d8f6ff; background: rgba(78,240,255,0.08); clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); box-shadow: inset 0 0 0 1px rgba(78,240,255,0.5); }
+  .hud .btn.primary { background: #4ef0ff; color: #03060c; }
+  .hud .seg { display: flex; gap: 2px; }
+  .hud .seg span { padding: 9px 12px; font: 600 12px "Chakra Petch", sans-serif; letter-spacing: 0.14em; text-transform: uppercase; color: #6f9bb0; background: rgba(78,240,255,0.05); }
+  .hud .seg span.on { color: #03060c; background: #ffb547; }
+  .hud .panel { border-left: 2px solid #4ef0ff; background: rgba(78,240,255,0.04); padding: 12px; display: grid; gap: 10px; }
+  .hud .label { font: 500 12px "Chakra Petch", sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: #8fc9dc; }
+  .hud .val { font: 500 12px "Geist Mono", monospace; color: #4ef0ff; }
+  .hud .track { height: 6px; position: relative; background: repeating-linear-gradient(90deg, #12324a 0 6px, transparent 6px 8px); }
+  .hud .track b { position: absolute; left: 0; top: 0; bottom: 0; width: 38%; background: repeating-linear-gradient(90deg, #4ef0ff 0 6px, transparent 6px 8px); }
+  .hud .track i { display: none; }
+  .hud .sw { width: 36px; height: 16px; position: relative; box-shadow: inset 0 0 0 1px #4ef0ff; }
+  .hud .sw i { position: absolute; right: 3px; top: 3px; width: 14px; height: 10px; background: #4ef0ff; }
+
+  /* ---------- 4. Liquid glass (visionOS / iOS 26) ---------- */
+  .lg { background: radial-gradient(120% 90% at 20% 0%, #3b2a7a 0%, #141a3c 45%, #070914 100%); color: #f4f5ff; }
+  .lg .phone { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); }
+  .lg .title { font: 600 16px "Sora", sans-serif; letter-spacing: -0.01em; }
+  .lg .sub { font: 400 12px "Sora", sans-serif; color: rgba(244,245,255,0.6); }
+  .lg .glass { background: rgba(255,255,255,0.12); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.25); }
+  .lg .ib { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; color: #f4f5ff; }
+  .lg .btn { height: 44px; padding: 0 16px; display: flex; align-items: center; gap: 8px; border-radius: 999px; font: 500 14px "Sora", sans-serif; color: #f4f5ff; }
+  .lg .btn.primary { background: #f4f5ff; color: #141a3c; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+  .lg .seg { display: flex; padding: 4px; border-radius: 999px; }
+  .lg .seg span { padding: 7px 14px; border-radius: 999px; font: 500 13px "Sora", sans-serif; color: rgba(244,245,255,0.65); }
+  .lg .seg span.on { background: rgba(255,255,255,0.9); color: #141a3c; }
+  .lg .panel { border-radius: 22px; padding: 14px; display: grid; gap: 10px; }
+  .lg .label { font: 400 13px "Sora", sans-serif; color: rgba(244,245,255,0.8); }
+  .lg .val { font: 500 12px "Sora", sans-serif; color: #f4f5ff; }
+  .lg .track { height: 6px; background: rgba(255,255,255,0.18); border-radius: 3px; position: relative; }
+  .lg .track b { position: absolute; left: 0; top: 0; bottom: 0; width: 38%; background: #fff; border-radius: 3px; }
+  .lg .track i { position: absolute; left: 38%; top: 50%; width: 22px; height: 22px; margin: -11px; border-radius: 50%; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.35); }
+  .lg .sw { width: 40px; height: 24px; border-radius: 12px; background: #34c759; position: relative; }
+  .lg .sw i { position: absolute; right: 2px; top: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+
+  /* ---------- Penrose proposal ---------- */
+  .penwrap { max-width: 1280px; margin: 0 auto; padding: 0 20px 48px; }
+  .penwrap h2 { font-size: 18px; margin: 0 0 4px; }
+  .penwrap p { margin: 0 0 14px; color: #5d5b55; max-width: 760px; }
+  .pens { display: grid; gap: 22px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+  .pens figure { margin: 0; border-radius: 22px; background: #0b0f1a; padding: 14px; color: #e8ecf7; }
+  .pens figcaption { font: 500 13px "Geist", sans-serif; color: #aab3c8; margin: 8px 4px 0; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></symbol>
+  <symbol id="reset" viewBox="0 0 24 24"><path d="M5 12a7 7 0 1 0 2.1-5M5 4.5V8h3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="gauge" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/></g></symbol>
+  <symbol id="sliders" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></g></symbol>
+  <symbol id="help" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9.2 9.2a2.9 2.9 0 1 1 3.9 2.7c-.7.3-1.1.9-1.1 1.6v.6"/><circle cx="12" cy="17.4" r="0.6" fill="currentColor"/></g></symbol>
+  <symbol id="shell" viewBox="0 0 24 24"><g fill="currentColor"><circle cx="12" cy="4.5" r="1.6"/><circle cx="18.5" cy="8.2" r="1.6"/><circle cx="18.5" cy="15.8" r="1.6"/><circle cx="12" cy="19.5" r="1.6"/><circle cx="5.5" cy="15.8" r="1.6"/><circle cx="5.5" cy="8.2" r="1.6"/></g></symbol>
+  <symbol id="rocket" viewBox="0 0 64 64"><path d="M32 20.5 Q35.6 26 34.8 33.8 L38 40.8 L33.7 38.6 L30.3 38.6 L26 40.8 L29.2 33.8 Q28.4 26 32 20.5 Z" fill="currentColor"/></symbol>
+</svg>
+
+<header class="lab">
+  <h1>Cosmic Horizon — four directions</h1>
+  <p>Each card is the same screen: top bar, sky, toolbar and a settings panel. Pick one (or mix: e.g. the type of one with the buttons of another). Below are three ways to make the Penrose diagram readable without a legend.</p>
+</header>
+
+<div class="grid">
+
+  <!-- 1 -->
+  <section class="card mc">
+    <div class="meta"><h2>1 · Mission control</h2><p>Outer Wilds / NASA-punk. Space Mono, cream on ink, one signal-orange accent. Flat, outlined, no glow.</p></div>
+    <div class="phone">
+      <div class="row"><svg class="i" style="width:30px;height:30px;color:#f3ead8" viewBox="0 0 64 64"><circle cx="32" cy="32" r="24" fill="none" stroke="#3fc1c9" stroke-width="4"/><use href="#rocket"/></svg>
+        <div class="grow"><div class="title">Cosmic Horizon</div><div class="sub">Push your boundaries</div></div>
+        <span class="ib"><svg class="i"><use href="#gauge"/></svg></span><span class="ib"><svg class="i"><use href="#sliders"/></svg></span><span class="ib"><svg class="i"><use href="#help"/></svg></span></div>
+      <svg class="sky" viewBox="0 0 270 200"><circle cx="135" cy="100" r="88" fill="none" stroke="#3a4766" stroke-dasharray="3 5"/><circle cx="135" cy="100" r="62" fill="none" stroke="#3fc1c9" stroke-width="2"/><g fill="#f3ead8"><circle cx="110" cy="80" r="2.4"/><circle cx="158" cy="72" r="2"/><circle cx="170" cy="120" r="2.2"/><circle cx="100" cy="128" r="1.8"/></g><g fill="#ff6b35"><circle cx="186" cy="96" r="2"/><circle cx="92" cy="60" r="1.8"/></g><svg x="125" y="88" width="20" height="24" viewBox="0 0 64 64" style="color:#f3ead8"><use href="#rocket"/></svg><text x="135" y="28" text-anchor="middle" font-family="Space Mono" font-size="9" fill="#3fc1c9" letter-spacing="1">HORIZON 0.600 ℓ</text></svg>
+      <div class="row"><span class="btn primary"><svg class="i"><use href="#play"/></svg>Run</span><span class="btn"><svg class="i"><use href="#shell"/></svg>Shell</span><span class="btn" style="padding:0 11px"><svg class="i"><use href="#reset"/></svg></span><span class="seg" style="margin-left:auto"><span class="on">Sky</span><span>Penrose</span></span></div>
+      <div class="panel"><div class="row"><span class="label grow">Mass per launch</span><span class="val">0.05 /8G</span></div><div class="track"><b></b><i></i></div><div class="row"><span class="label grow">Infrared camera</span><span class="sw"><i></i></span></div></div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="card st">
+    <div class="meta"><h2>2 · Studio</h2><p>Linear / Vercel / Raycast. Geist, neutral greys, hairline borders, one violet accent. Quiet, precise, very "2025 app".</p></div>
+    <div class="phone">
+      <div class="row"><svg class="i" style="width:28px;height:28px;color:#ededef" viewBox="0 0 64 64"><circle cx="32" cy="32" r="24" fill="none" stroke="#7c5cff" stroke-width="4"/><use href="#rocket"/></svg>
+        <div class="grow"><div class="title">Cosmic Horizon</div><div class="sub">Push your boundaries</div></div>
+        <span class="ib"><svg class="i"><use href="#gauge"/></svg></span><span class="ib"><svg class="i"><use href="#sliders"/></svg></span><span class="ib"><svg class="i"><use href="#help"/></svg></span></div>
+      <svg class="sky" viewBox="0 0 270 200"><circle cx="135" cy="100" r="88" fill="none" stroke="#26262b"/><circle cx="135" cy="100" r="62" fill="none" stroke="#ededef" stroke-width="1.5"/><g fill="#c9c9d1"><circle cx="110" cy="80" r="2.4"/><circle cx="158" cy="72" r="2"/><circle cx="170" cy="120" r="2.2"/><circle cx="100" cy="128" r="1.8"/></g><g fill="#7c5cff"><circle cx="186" cy="96" r="2.2"/><circle cx="92" cy="60" r="1.8"/></g><svg x="126" y="89" width="18" height="22" viewBox="0 0 64 64" style="color:#ededef"><use href="#rocket"/></svg><text x="135" y="30" text-anchor="middle" font-family="Geist" font-size="10" fill="#8a8a93">Horizon 0.600 ℓ</text></svg>
+      <div class="row"><span class="btn primary"><svg class="i"><use href="#play"/></svg>Play</span><span class="btn"><svg class="i"><use href="#shell"/></svg>Shell</span><span class="btn" style="padding:0 11px"><svg class="i"><use href="#reset"/></svg></span><span class="seg" style="margin-left:auto"><span class="on">Sky</span><span>Penrose</span></span></div>
+      <div class="panel"><div class="row"><span class="label grow">Mass per launch</span><span class="val">0.05 /8G</span></div><div class="track"><b></b><i></i></div><div class="row"><span class="label grow">Infrared camera</span><span class="sw"><i></i></span></div></div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="card hud">
+    <div class="meta"><h2>3 · HUD</h2><p>Sci-fi game (Destiny / Elite / Mass Effect, restrained). Chakra Petch + Geist Mono, chamfered corners, cyan with amber selection.</p></div>
+    <div class="phone">
+      <div class="row"><svg class="i" style="width:30px;height:30px;color:#d8f6ff" viewBox="0 0 64 64"><circle cx="32" cy="32" r="24" fill="none" stroke="#4ef0ff" stroke-width="3"/><use href="#rocket"/></svg>
+        <div class="grow"><div class="title">Cosmic Horizon</div><div class="sub">// PUSH YOUR BOUNDARIES</div></div>
+        <span class="ib"><svg class="i"><use href="#gauge"/></svg></span><span class="ib"><svg class="i"><use href="#sliders"/></svg></span><span class="ib"><svg class="i"><use href="#help"/></svg></span></div>
+      <svg class="sky" viewBox="0 0 270 200"><circle cx="135" cy="100" r="88" fill="none" stroke="#12324a" stroke-dasharray="1 4"/><circle cx="135" cy="100" r="62" fill="none" stroke="#4ef0ff" stroke-width="1.5"/><g stroke="#4ef0ff" stroke-width="1.5"><path d="M135 34v6M135 160v6M69 100h6M195 100h6"/></g><g fill="#d8f6ff"><circle cx="110" cy="80" r="2.4"/><circle cx="158" cy="72" r="2"/><circle cx="170" cy="120" r="2.2"/><circle cx="100" cy="128" r="1.8"/></g><g fill="#ffb547"><circle cx="186" cy="96" r="2"/><circle cx="92" cy="60" r="1.8"/></g><svg x="126" y="89" width="18" height="22" viewBox="0 0 64 64" style="color:#d8f6ff"><use href="#rocket"/></svg><text x="135" y="26" text-anchor="middle" font-family="Geist Mono" font-size="9" fill="#4ef0ff" letter-spacing="1.5">R_C 0.600ℓ</text></svg>
+      <div class="row"><span class="btn primary"><svg class="i"><use href="#play"/></svg>Run</span><span class="btn"><svg class="i"><use href="#shell"/></svg>Shell</span><span class="btn" style="padding:0 11px"><svg class="i"><use href="#reset"/></svg></span><span class="seg" style="margin-left:auto"><span class="on">Sky</span><span>Penrose</span></span></div>
+      <div class="panel"><div class="row"><span class="label grow">Mass per launch</span><span class="val">0.050</span></div><div class="track"><b></b><i></i></div><div class="row"><span class="label grow">IR camera</span><span class="sw"><i></i></span></div></div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="card lg">
+    <div class="meta"><h2>4 · Liquid glass</h2><p>visionOS / iOS 26. Sora, frosted capsules with a light edge, big friendly targets. Soft and premium, very touch-first.</p></div>
+    <div class="phone">
+      <div class="row"><svg class="i" style="width:30px;height:30px;color:#f4f5ff" viewBox="0 0 64 64"><circle cx="32" cy="32" r="24" fill="none" stroke="#b7a6ff" stroke-width="4"/><use href="#rocket"/></svg>
+        <div class="grow"><div class="title">Cosmic Horizon</div><div class="sub">Push your boundaries</div></div>
+        <span class="ib glass"><svg class="i"><use href="#gauge"/></svg></span><span class="ib glass"><svg class="i"><use href="#sliders"/></svg></span><span class="ib glass"><svg class="i"><use href="#help"/></svg></span></div>
+      <svg class="sky" viewBox="0 0 270 200"><circle cx="135" cy="100" r="88" fill="none" stroke="rgba(255,255,255,0.18)" stroke-dasharray="3 5"/><circle cx="135" cy="100" r="62" fill="none" stroke="#e6e0ff" stroke-width="2"/><g fill="#ffffff"><circle cx="110" cy="80" r="2.4"/><circle cx="158" cy="72" r="2"/><circle cx="170" cy="120" r="2.2"/><circle cx="100" cy="128" r="1.8"/></g><g fill="#ffb3d1"><circle cx="186" cy="96" r="2"/><circle cx="92" cy="60" r="1.8"/></g><svg x="126" y="89" width="18" height="22" viewBox="0 0 64 64" style="color:#fff"><use href="#rocket"/></svg><text x="135" y="30" text-anchor="middle" font-family="Sora" font-size="10" fill="rgba(244,245,255,0.75)">Horizon 0.600 ℓ</text></svg>
+      <div class="row"><span class="btn primary"><svg class="i"><use href="#play"/></svg>Play</span><span class="btn glass"><svg class="i"><use href="#shell"/></svg>Shell</span><span class="btn glass" style="padding:0 12px"><svg class="i"><use href="#reset"/></svg></span><span class="seg glass" style="margin-left:auto"><span class="on">Sky</span><span>Penrose</span></span></div>
+      <div class="panel glass"><div class="row"><span class="label grow">Mass per launch</span><span class="val">0.05 /8G</span></div><div class="track"><b></b><i></i></div><div class="row"><span class="label grow">Infrared camera</span><span class="sw"><i></i></span></div></div>
+    </div>
+  </section>
+</div>
+
+<div class="penwrap">
+  <h2>Penrose diagram — three ways to read it without a legend</h2>
+  <p>All three use thicker strokes (2–3 px), one clearly different hue per role, and labels written on the lines themselves. They differ in how they show past versus future.</p>
+  <div class="pens">
+
+    <figure>
+      <svg class="pen" viewBox="0 0 300 300" font-family="Geist">
+        <defs><clipPath id="sq1"><path d="M30 30 H270 V270 H30 Z"/></clipPath></defs>
+        <g clip-path="url(#sq1)">
+          <path d="M30 150 L150 270 L30 270 Z" fill="#ffc94d" fill-opacity="0.18"/>
+          <path d="M30 150 L150 30 L30 30 Z" fill="#7ec8ff" fill-opacity="0.12"/>
+          <path d="M60 270 L200 30" stroke="#b9a7ff" stroke-width="2"/>
+          <path d="M90 270 L250 30" stroke="#b9a7ff" stroke-width="2"/>
+          <path d="M30 30 L270 270" stroke="#ffffff" stroke-width="2.4" stroke-dasharray="7 6"/>
+          <path d="M30 150 L150 270" stroke="#ffc94d" stroke-width="3"/>
+          <path d="M30 150 L150 30" stroke="#7ec8ff" stroke-width="2.4"/>
+        </g>
+        <rect x="30" y="30" width="240" height="240" fill="none" stroke="#5c6680" stroke-width="1.5"/>
+        <circle cx="30" cy="150" r="6" fill="#ffc94d"/>
+        <g paint-order="stroke" stroke="#0b0f1a" stroke-width="4" stroke-linejoin="round">
+          <text x="40" y="146" font-size="13" font-weight="600" fill="#ffc94d">now</text>
+          <text x="38" y="258" font-size="13" fill="#ffc94d">your past</text>
+          <text x="38" y="48" font-size="13" fill="#7ec8ff">your future</text>
+          <text x="214" y="200" font-size="12" fill="#ffffff" transform="rotate(45 214 200)">event horizon</text>
+        </g>
+        <text x="150" y="20" text-anchor="middle" font-size="12" fill="#aab3c8">future infinity  I⁺</text>
+      </svg>
+      <figcaption>A · Shaded regions: gold = what you have seen, blue = what you can still reach. Labels sit on the diagram.</figcaption>
+    </figure>
+
+    <figure>
+      <svg class="pen" viewBox="0 0 300 300" font-family="Geist">
+        <defs><clipPath id="sq2"><path d="M30 30 H270 V270 H30 Z"/></clipPath>
+          <marker id="arr" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#e8ecf7"/></marker></defs>
+        <g clip-path="url(#sq2)">
+          <path d="M60 270 L200 30" stroke="#b9a7ff" stroke-width="1.6" stroke-opacity="0.45"/>
+          <path d="M60 270 L93.2 213.2" stroke="#b9a7ff" stroke-width="3.5"/>
+          <path d="M30 30 L270 270" stroke="#ffffff" stroke-width="2.4" stroke-dasharray="7 6"/>
+          <path d="M30 150 L150 270" stroke="#ffc94d" stroke-width="3"/>
+          <circle cx="93.2" cy="213.2" r="5.5" fill="#b9a7ff" stroke="#0b0f1a" stroke-width="2"/>
+          <circle cx="137.4" cy="137.4" r="4" fill="none" stroke="#ffffff" stroke-width="2"/>
+        </g>
+        <rect x="30" y="30" width="240" height="240" fill="none" stroke="#5c6680" stroke-width="1.5"/>
+        <path d="M14 230 V 80" stroke="#e8ecf7" stroke-width="1.6" marker-end="url(#arr)"/>
+        <text x="10" y="160" font-size="12" fill="#e8ecf7" transform="rotate(-90 10 160)" text-anchor="middle">time</text>
+        <circle cx="30" cy="150" r="6" fill="#ffc94d"/>
+        <g paint-order="stroke" stroke="#0b0f1a" stroke-width="4" stroke-linejoin="round">
+          <text x="40" y="146" font-size="13" font-weight="600" fill="#ffc94d">now</text>
+          <text x="102" y="222" font-size="12" fill="#b9a7ff">what you see now</text>
+          <text x="146" y="134" font-size="12" fill="#ffffff">its last moment</text>
+          <text x="46" y="196" font-size="12" fill="#ffc94d" transform="rotate(45 46 196)">light reaching you</text>
+        </g>
+      </svg>
+      <figcaption>B · A time arrow and one story: the light reaching you now, where on a galaxy it left from, and the last moment you will ever see.</figcaption>
+    </figure>
+
+    <figure>
+      <svg class="pen" viewBox="0 0 300 300" font-family="Geist">
+        <defs><clipPath id="sq3"><path d="M30 30 H270 V270 H30 Z"/></clipPath></defs>
+        <g clip-path="url(#sq3)">
+          <path d="M30 30 H270 V270 Z" fill="#05070c"/>
+          <path d="M30 30 L270 270 H150 L30 150 Z" fill="#141a2a"/>
+          <path d="M30 150 L150 270 H30 Z" fill="#2a3150"/>
+          <path d="M60 270 L200 30" stroke="#b9a7ff" stroke-width="2"/>
+          <path d="M90 270 L250 30" stroke="#b9a7ff" stroke-width="2"/>
+          <path d="M30 30 L270 270" stroke="#ff5c8a" stroke-width="3"/>
+          <path d="M30 150 L150 270" stroke="#ffc94d" stroke-width="3"/>
+        </g>
+        <rect x="30" y="30" width="240" height="240" fill="none" stroke="#5c6680" stroke-width="1.5"/>
+        <circle cx="30" cy="150" r="6" fill="#ffc94d"/>
+        <g paint-order="stroke" stroke="#0b0f1a" stroke-width="4" stroke-linejoin="round">
+          <text x="40" y="146" font-size="13" font-weight="600" fill="#ffc94d">now</text>
+          <text x="40" y="258" font-size="13" fill="#e8ecf7">seen</text>
+          <text x="40" y="104" font-size="13" fill="#aab3c8">will see</text>
+          <text x="212" y="80" font-size="13" fill="#6c7590" text-anchor="middle">never</text>
+          <text x="176" y="166" font-size="12" fill="#ff5c8a" transform="rotate(45 176 166)">point of no return</text>
+        </g>
+      </svg>
+      <figcaption>C · Three bands by brightness: seen, will see, never. The horizon is the one hot colour, the line between "will see" and "never".</figcaption>
+    </figure>
+  </div>
+</div>
+</div>
+</body>
+</html>

@@ -183,7 +183,7 @@
     const { cx, cy, R } = skyGeom();
     const st = S.st, aNow = st.aNow, mNow = st.mNow;
 
-    c.fillStyle = '#04060c';
+    c.fillStyle = '#0b1120';
     c.fillRect(0, 0, w, h);
 
     // Edge of what you can see now: the outermost point of your past light cone.
@@ -191,30 +191,27 @@
     // newly enclosed region arrives (over ~ℓ), while r_c(M_now) itself jumps at once.
     const rEdge = DS.coneMaxR(S.cone);
 
-    // Inside the visible edge: faint glow, so the observable region reads as a disc.
-    const g0 = c.createRadialGradient(cx, cy, 0, cx, cy, rEdge * R);
-    g0.addColorStop(0, 'rgba(30,40,80,0.35)');
-    g0.addColorStop(1, 'rgba(20,28,60,0.10)');
-    c.fillStyle = g0; circle(c, cx, cy, rEdge * R); c.fill();
+    // Inside the visible edge: a flat, slightly lighter disc.
+    c.fillStyle = '#0f1729'; circle(c, cx, cy, rEdge * R); c.fill();
 
     // Reference circles in areal radius.
     c.lineWidth = 1;
-    c.strokeStyle = 'rgba(255,255,255,0.05)';
+    c.strokeStyle = 'rgba(243,234,216,0.06)';
     for (const r of [0.25, 0.5, 0.75]) { circle(c, cx, cy, r * R); c.stroke(); }
     c.setLineDash([3, 5]);
-    c.strokeStyle = 'rgba(255,255,255,0.16)';
+    c.strokeStyle = 'rgba(243,234,216,0.22)';
     circle(c, cx, cy, R); c.stroke();
     c.setLineDash([]);
-    c.fillStyle = 'rgba(255,255,255,0.32)';
-    c.font = '13px Manrope, system-ui, sans-serif';
+    c.fillStyle = '#9fb0c8';
+    c.font = '400 11px "Space Mono", monospace';
     c.textAlign = 'center';
-    c.fillText('r = ℓ  (empty dS)', cx, cy + R + 15 < h - 4 ? cy + R + 15 : cy + R - 7);
+    c.fillText('r = ℓ · empty dS', cx, cy + R + 15 < h - 4 ? cy + R + 15 : cy + R - 7);
     c.textAlign = 'center';
 
     // Earlier horizons.
     if (ui.oldH) {
       c.setLineDash([2, 4]);
-      c.strokeStyle = 'rgba(127,208,255,0.28)';
+      c.strokeStyle = 'rgba(255,92,138,0.3)';
       for (const a of S.oldHorizons) if (Math.abs(a - aNow) > 1e-4) { circle(c, cx, cy, a * R); c.stroke(); }
       c.setLineDash([]);
     }
@@ -224,32 +221,28 @@
     const catching = aNow - rEdge > 2e-4;
     if (catching) {
       c.setLineDash([5, 4]);
-      c.strokeStyle = 'rgba(160,215,255,0.7)';
-      c.lineWidth = 1.2;
+      c.strokeStyle = 'rgba(255,92,138,0.75)';
+      c.lineWidth = 1.5;
       circle(c, cx, cy, rh); c.stroke();
       c.setLineDash([]);
     }
 
     // The visible horizon (solid).
     const re = rEdge * R;
-    const gh = c.createRadialGradient(cx, cy, Math.max(0, re - 14), cx, cy, re + 16);
-    gh.addColorStop(0, 'rgba(127,208,255,0)');
-    gh.addColorStop(0.47, 'rgba(127,208,255,0.30)');
-    gh.addColorStop(1, 'rgba(127,208,255,0)');
-    c.fillStyle = gh; circle(c, cx, cy, re + 16); c.fill();
-    c.strokeStyle = 'rgba(160,215,255,0.95)';
-    c.lineWidth = 1.6;
+    c.strokeStyle = '#ff5c8a';
+    c.lineWidth = 2;
     circle(c, cx, cy, re); c.stroke();
-    c.fillStyle = 'rgba(160,215,255,0.95)';
+    c.font = '700 11px "Space Mono", monospace';
+    c.fillStyle = '#ff5c8a';
     const ly = cy - rh - 8 < 12 ? cy - rh + 16 : cy - rh - 8;
-    c.fillText(`horizon  r꜀ = ${aNow.toFixed(3)} ℓ`, cx, ly);
+    c.fillText(`HORIZON  r꜀ = ${aNow.toFixed(3)} ℓ`, cx, ly);
     if (catching) {
       // Just below the solid circle, on a dark pill so it stays legible over the dashed r_c.
-      const txt = `visible edge ${rEdge.toFixed(3)} ℓ`;
+      const txt = `VISIBLE EDGE ${rEdge.toFixed(3)} ℓ`;
       const tw = c.measureText(txt).width, ty = cy + re + 17;
-      c.fillStyle = 'rgba(4,6,13,0.78)';
-      c.beginPath(); c.roundRect(cx - tw / 2 - 7, ty - 13, tw + 14, 18, 9); c.fill();
-      c.fillStyle = 'rgba(190,225,255,0.95)';
+      c.fillStyle = '#0b1120';
+      c.beginPath(); c.roundRect(cx - tw / 2 - 7, ty - 13, tw + 14, 18, 6); c.fill();
+      c.fillStyle = '#ff8fae';
       c.fillText(txt, cx, ty);
     }
 
@@ -276,7 +269,7 @@
   // A minimal rocket silhouette of height H centred on (x, y), nose up.
   function rocket(c, x, y, H) {
     const w = 0.3 * H, top = y - 0.5 * H, bot = y + 0.3 * H;
-    c.fillStyle = '#e9edff';
+    c.fillStyle = '#f3ead8';
     c.beginPath();
     c.moveTo(x, top);                                                     // nose
     c.quadraticCurveTo(x + 0.62 * w, top + 0.3 * H, x + 0.5 * w, bot - 0.1 * H);
@@ -353,7 +346,7 @@
     const { x, y, al } = p, e = s.obs;
     if (labelsOn) {                 // names only while the beacon list is open
       c.fillStyle = `rgba(230,236,255,${0.45 + 0.4 * Math.min(1, al)})`;
-      c.font = '12px Manrope, system-ui, sans-serif';
+      c.font = '400 11px "Space Mono", monospace';
       c.textAlign = 'left';
       c.fillText(`B${s.id} #${Math.floor(e.tau / MSG_PERIOD)}`, x + 7, y - 6);
     }
@@ -365,7 +358,7 @@
     const { w, h, dpr } = fit(spec);
     const c = cP;
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
-    c.fillStyle = '#070a14'; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#121a2b'; c.fillRect(0, 0, w, h);
     const x0 = 8, x1 = w - 8;
     const X = nm => x0 + (Math.log10(nm) - L0) / (L1 - L0) * (x1 - x0);
     const top = 16, bot = h - 16;
@@ -388,7 +381,7 @@
       c.fillStyle = g; c.fillRect(X(100), top, X(750) - X(100), bot - top);
     }
 
-    c.font = '11.5px Manrope, system-ui, sans-serif';
+    c.font = '400 10.5px "Space Mono", monospace';
     c.textAlign = 'center';
     c.fillStyle = 'rgba(200,210,240,0.75)';
     const lbl = [['UV', 200], ['vis', 530], ['infrared', 2.5e4], ['microwave', 3e7], ['radio', 3e9]];
@@ -419,9 +412,16 @@
   // ---------- Penrose diagram ----------
   function penGeom() {
     const w = pen.clientWidth, h = pen.clientHeight;
-    const pad = 26;
+    const pad = 46;   // room for the "Now" label left of the diagram
     return { cx: w / 2, cy: h / 2, s: (Math.min(w, h) / 2 - pad) / HALF };
   }
+  const PEN = {
+    space: '#0e1626', frame: 'rgba(243,234,216,0.45)', halo: '#0b1120', muted: '#9fb0c8',
+    past: '#ffc94d', pastFill: 'rgba(255,201,77,0.16)',
+    future: '#7ec8ff', futureFill: 'rgba(126,200,255,0.11)',
+    horizon: '#ff5c8a', horizonDim: 'rgba(255,92,138,0.75)',
+    now: '#f3ead8', galaxy: 'rgba(185,167,255,0.6)', galaxyFuture: 'rgba(185,167,255,0.28)',
+  };
   function toXY(g, P, Q) { return [g.cx + (Q - P) * g.s, g.cy - (P + Q) * g.s]; }
 
   /*
@@ -546,50 +546,48 @@
     c.clip(square);
     c.save();
     c.clip(outline);
-    c.fillStyle = '#060913'; c.fill(outline);
+    c.fillStyle = PEN.space; c.fill(outline);
 
     const quad = (Pa, Pb, Qa, Qb, fill) => {
       c.beginPath();
       [[Pa, Qa], [Pb, Qa], [Pb, Qb], [Pa, Qb]].forEach(([P, Q], i) => { const [x, y] = toXY(g, P, Q); if (i) c.lineTo(x, y); else c.moveTo(x, y); });
       c.closePath(); c.fillStyle = fill; c.fill();
     };
-    quad(-HALF, HALF, -HALF, 0, 'rgba(90,130,255,0.08)');       // everything you will ever see
-    quad(-HALF, Pn, -HALF, Qn, 'rgba(255,210,122,0.10)');        // everything you have seen so far
+    quad(-HALF, Pn, -HALF, Qn, PEN.pastFill);       // your past: everything you have seen
+    quad(Pn, HALF, Qn, HALF, PEN.futureFill);       // your future: everything you can still reach
 
     // Worldlines.
-    c.lineWidth = 0.8;
+    c.lineWidth = 1.4;
     for (const s of S.sources) {
       if (s.kind !== 'star' || !ui.stars) continue;
       updatePQ(s);
       if (refreshTails || !s.tail) { if (!s.gone || !s.tail || s.tail.ver !== st.version) updateTail(s); }
-      drawWorldline(c, g, s, 'rgba(159,176,224,0.24)', 'rgba(159,176,224,0.14)');
+      drawWorldline(c, g, s, PEN.galaxy, PEN.galaxyFuture);
     }
-    c.lineWidth = 1.3;
+    c.lineWidth = 2;
     for (const s of S.sources) {
       if (s.kind !== 'beacon') continue;
       updatePQ(s);
       if (refreshTails || !s.tail) { if (!s.gone || !s.tail || s.tail.ver !== st.version) updateTail(s); }
-      drawWorldline(c, g, s, `hsla(${s.hue},85%,68%,0.85)`, `hsla(${s.hue},85%,68%,0.4)`);
+      drawWorldline(c, g, s, `hsla(${s.hue},85%,70%,0.95)`, `hsla(${s.hue},85%,70%,0.45)`);
     }
 
-    // Apparent horizon.
-    c.strokeStyle = 'rgba(127,208,255,0.9)';
-    c.lineWidth = 1.5;
+    // Apparent horizon (dashed) and event horizon V = 0 (solid): the same hot colour.
+    c.strokeStyle = PEN.horizonDim;
+    c.lineWidth = 2;
+    c.setLineDash([6, 5]);
     for (const seg of S.pen.ah) strokeRaw(c, g, seg.map(p => p[0]), seg.map(p => p[1]), seg.map(p => p[2]));
-
-    // Event horizon V = 0.
-    c.setLineDash([5, 4]);
-    c.strokeStyle = 'rgba(232,238,255,0.7)';
-    c.lineWidth = 1;
-    { const [x1, y1] = toXY(g, HALF, 0), [x2, y2] = toXY(g, -HALF, 0); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
     c.setLineDash([]);
+    c.strokeStyle = PEN.horizon;
+    c.lineWidth = 3;
+    { const [x1, y1] = toXY(g, HALF, 0), [x2, y2] = toXY(g, -HALF, 0); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
 
     // Your light cones now.
-    c.strokeStyle = 'rgba(255,210,122,0.95)';
-    c.lineWidth = 1.6;
+    c.strokeStyle = PEN.past;
+    c.lineWidth = 3;
     { const [x1, y1] = toXY(g, Pn, Qn), [x2, y2] = toXY(g, -HALF, Qn); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
-    c.strokeStyle = 'rgba(255,210,122,0.35)';
-    c.lineWidth = 1;
+    c.strokeStyle = PEN.future;
+    c.lineWidth = 2.4;
     { const [x1, y1] = toXY(g, Pn, Qn), [x2, y2] = toXY(g, Pn, HALF - Pn); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
 
     // What you are seeing right now: emission events on the past cone.
@@ -597,35 +595,51 @@
       const e = s.obs;
       if (!e || e.z1 > Z_LOST || (s.kind === 'star' && !ui.stars)) continue;
       const [x, y] = toXY(g, mapP(st.tau(e.u)), mapQ(...st.labelVlog(e.u, e.r)));
-      c.fillStyle = s.kind === 'star' ? 'rgba(230,236,255,0.6)' : `hsl(${s.hue},85%,68%)`;
-      circle(c, x, y, s.kind === 'star' ? 1.4 : 2.6); c.fill();
+      c.fillStyle = s.kind === 'star' ? PEN.galaxy : `hsl(${s.hue},85%,70%)`;
+      circle(c, x, y, s.kind === 'star' ? 1.8 : 3); c.fill();
     }
     c.restore();
 
-    c.strokeStyle = 'rgba(232,238,255,0.55)';
-    c.lineWidth = 1.2;
+    c.strokeStyle = PEN.frame;
+    c.lineWidth = 1.5;
     c.stroke(outline);
     c.restore();
-    { const [x, y] = toXY(g, Pn, Qn); c.fillStyle = '#ffd27a'; circle(c, x, y, 4); c.fill(); }
 
-    c.font = '13px Manrope, system-ui, sans-serif';
-    c.fillStyle = 'rgba(200,210,240,0.85)';
+    // Labels, written on the diagram (each with a dark halo so lines never cut through them).
+    const top = g.cy - HALF * g.s, bot = g.cy + HALF * g.s, left = g.cx - HALF * g.s;
+    const label = (txt, x, y, color, align = 'left', rot = 0, size = 12) => {
+      c.save();
+      c.translate(x, y); c.rotate(rot);
+      c.font = `700 ${size}px "Space Mono", monospace`;
+      c.textAlign = align;
+      c.lineJoin = 'round'; c.lineWidth = 4; c.strokeStyle = PEN.halo;
+      c.strokeText(txt, 0, 0);
+      c.fillStyle = color; c.fillText(txt, 0, 0);
+      c.restore();
+    };
+    const [xn, yn] = toXY(g, Pn, Qn);
+    c.fillStyle = PEN.now; c.strokeStyle = PEN.halo; c.lineWidth = 2.5;
+    circle(c, xn, yn, 5.5); c.fill(); c.stroke();
+    label('Now', xn - 10, yn + 4, PEN.now, 'right', 0, 13);
+    // Inside each triangle: the cones are at 45°, so keep the text below/above the diagonal.
+    if (yn + 66 < bot - 4) label('Past', xn + 8, yn + 62, PEN.past);
+    if (yn - 84 > top + 4) label('Future', xn + 8, yn - 70, PEN.future);
+    {
+      const [hx, hy] = toXY(g, 0.32, 0);
+      label('event horizon', hx + 4, hy - 7, PEN.horizon, 'left', PI / 4, 11);
+    }
+    c.font = '700 12px "Space Mono", monospace';
+    c.fillStyle = PEN.muted;
     c.textAlign = 'center';
-    c.fillText('I⁺', g.cx, g.cy - HALF * g.s - 7);
+    c.fillText('I⁺', g.cx, top - 8);
     c.save();
-    c.translate(g.cx - HALF * g.s - 8, g.cy); c.rotate(-HALF);
-    c.fillText('you (r = 0)', 0, 0);
+    c.translate(left - 12, g.cy + 0.55 * HALF * g.s); c.rotate(-HALF);
+    c.fillText('you · r = 0', 0, 0);
     c.restore();
     c.save();
-    c.translate(g.cx + HALF * g.s + 8, g.cy); c.rotate(HALF);
+    c.translate(g.cx + HALF * g.s + 12, g.cy); c.rotate(HALF);
     c.fillText('antipode', 0, 0);
     c.restore();
-    if (penMode === 'now') {
-      c.textAlign = 'left';
-      c.fillStyle = 'rgba(255,210,122,0.9)';
-      const [x, y] = toXY(g, Pn, Qn);
-      c.fillText('now', x + 8, y + 4);
-    }
   }
 
   // ---------- beacon list ----------
