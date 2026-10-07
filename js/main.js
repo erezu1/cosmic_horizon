@@ -164,6 +164,18 @@
 
   // Brightness follows the received colour: full up to blue, then fading steeply,
   // so reds are already faint and the infrared nearly gone (schematic, not photometric).
+  // Canvas elements that come and go (labels, the dashed horizon) fade over the same FX_MS as the
+  // HTML panels: fade(key, on) eases a per-key level towards 1 or 0 and returns the eased alpha.
+  const fadeLevel = {};
+  let frameDt = 0;
+  function fade(key, on) {
+    const v0 = fadeLevel[key] ?? (on ? 1 : 0);
+    const step = frameDt * 1000 / FX_MS;
+    const v = on ? Math.min(1, v0 + step) : Math.max(0, v0 - step);
+    fadeLevel[key] = v;
+    return 1 - Math.pow(1 - v, 3);               // ease-out, like the CSS curve
+  }
+
   const brightness = (z1, lam) => Math.min(1, Math.pow(lam / 450, -3));
 
   function circle(c, x, y, r) { c.beginPath(); c.arc(x, y, Math.max(0, r), 0, TAU); }
@@ -217,13 +229,15 @@
 
     // Horizon set by your mass now (jumps when you emit).
     const rh = aNow * R;
-    const catching = aNow - rEdge > 2e-4;
-    if (catching) {
+    const catching = fade('catching', aNow - rEdge > 2e-4);   // 0…1: dashed circle and its labels
+    if (catching > 0) {
+      c.globalAlpha = catching;
       c.setLineDash([5, 4]);
       c.strokeStyle = 'rgba(255,92,138,0.75)';
       c.lineWidth = 1.5;
       circle(c, cx, cy, rh); c.stroke();
       c.setLineDash([]);
+      c.globalAlpha = 1;
     }
 
     // The visible horizon (solid).
@@ -244,16 +258,21 @@
       c.textAlign = 'center';
     };
     const ly = cy - rh - 8 < 12 ? cy - rh + 16 : cy - rh - 8;
-    if (catching) {
+    // Crossfade between the two-circle labels and the single "HORIZON" label.
+    if (catching > 0) {
+      c.globalAlpha = catching;
       tagged(`APPARENT HORIZON  r꜀ = ${aNow.toFixed(3)} ℓ`, ly, 'rgba(255,92,138,0.75)', true, false);
       tagged(`VISIBLE EDGE ${rEdge.toFixed(3)} ℓ`, cy + re + 17, '#ff5c8a', false, true);
-    } else {
+    }
+    if (catching < 1) {
+      c.globalAlpha = 1 - catching;
       tagged(`HORIZON  r꜀ = ${aNow.toFixed(3)} ℓ`, ly, '#ff5c8a', false, false);
     }
+    c.globalAlpha = 1;
 
     // Sources.
     if (ui.stars) for (const s of S.sources) if (s.kind === 'star') drawStar(c, s, cx, cy, R);
-    labelsOn = isShown($('beaconSheet'));
+    labelsOn = fade('beaconNames', isShown($('beaconSheet')));
     for (const s of S.sources) if (s.kind === 'beacon') drawBeacon(c, s, cx, cy, R);
 
     // You: a little rocket, larger the more mass you still carry.
@@ -349,8 +368,8 @@
     });
     if (!p) return;
     const { x, y, al } = p, e = s.obs;
-    if (labelsOn) {                 // names only while the beacon list is open
-      c.fillStyle = `rgba(230,236,255,${0.45 + 0.4 * Math.min(1, al)})`;
+    if (labelsOn > 0) {             // names only while the beacon list is open (faded in and out)
+      c.fillStyle = `rgba(230,236,255,${labelsOn * (0.45 + 0.4 * Math.min(1, al))})`;
       c.font = '400 11px "Space Mono", monospace';
       c.textAlign = 'left';
       c.fillText(`B${s.id} #${Math.floor(e.tau / MSG_PERIOD)}`, x + 7, y - 6);
@@ -627,8 +646,10 @@
 
     // Labels, written on the diagram (each with a dark halo so lines never cut through them).
     const top = g.cy - HALF * g.s, bot = g.cy + HALF * g.s, left = g.cx - HALF * g.s;
-    const label = (txt, x, y, color, align = 'left', rot = 0, size = 12) => {
+    const label = (txt, x, y, color, align = 'left', rot = 0, size = 12, alpha = 1) => {
+      if (alpha <= 0) return;
       c.save();
+      c.globalAlpha = alpha;
       c.translate(x, y); c.rotate(rot);
       c.font = `700 ${size}px "Space Mono", monospace`;
       c.textAlign = align;
@@ -640,8 +661,8 @@
     const [xn, yn] = toXY(g, Pn, Qn);
     label('Now', xn - 10, yn + 4, PEN.now, 'right', 0, 13);
     // Inside each triangle: the cones are at 45°, so keep the text below/above the diagonal.
-    if (yn + 66 < bot - 4) label('Past', xn + 8, yn + 62, PEN.past);
-    if (yn - 84 > top + 4) label('Future', xn + 8, yn - 70, PEN.future);
+    label('Past', xn + 8, yn + 62, PEN.past, 'left', 0, 12, fade('penPast', yn + 66 < bot - 4));
+    label('Future', xn + 8, yn - 70, PEN.future, 'left', 0, 12, fade('penFuture', yn - 84 > top + 4));
     {
       const [hx, hy] = toXY(g, 0.32, 0);
       label('event horizon', hx + 4, hy - 7, PEN.horizon, 'left', PI / 4, 11);
@@ -855,6 +876,7 @@
   let last = performance.now();
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000);
+    frameDt = dt;
     last = now;
     if (S.playing) S.tau += ui.speed * dt;
     step();
