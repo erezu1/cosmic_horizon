@@ -157,12 +157,9 @@
     return { w, h, dpr };
   }
   const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
-  // Brightness falls with the redshift accumulated since launch (the launch Doppler factor is
-  // built into the tuned transmitters); light still near the UV is at full, white-hot brightness.
-  const brightness = (z1, lam) => {
-    const b = Math.min(1, 1.4 * Math.pow(z1 / DOP_LAUNCH, -0.5));
-    return lam < 420 ? Math.max(b, 1 - (lam - 260) / 400) : b;
-  };
+  // Brightness follows the received colour: full up to blue, then fading steeply,
+  // so reds are already faint and the infrared nearly gone (schematic, not photometric).
+  const brightness = (z1, lam) => Math.min(1, Math.pow(lam / 450, -3));
 
   function circle(c, x, y, r) { c.beginPath(); c.arc(x, y, Math.max(0, r), 0, TAU); }
 
@@ -286,7 +283,7 @@
     g.addColorStop(0, rgba(col, 0.55 * al));
     g.addColorStop(1, rgba(col, 0));
     c.fillStyle = g; circle(c, x, y, rad * 4); c.fill();
-    c.fillStyle = rgba(col, Math.min(1, 0.25 + al));
+    c.fillStyle = rgba(col, Math.min(1, 0.12 + al));
     starPath(c, x, y, rad * 2.4, rad * 1.0, s.rot); c.fill();
   }
 
@@ -310,7 +307,7 @@
     const x = cx + dist * cos, y = cy - dist * sin;
     const col = Colors.rgb(e.lam, ui.ir);
     const band = Colors.band(e.lam);
-    let al = Math.max(0.22, brightness(e.z1, e.lam));
+    let al = Math.max(0.12, brightness(e.z1, e.lam));
     if (ui.ir) al = Math.max(al, 0.75);
     const dash = ui.ir ? [] : band === 'infrared' ? [3, 2] : (band === 'microwave' || band === 'radio') ? [1, 3] : [];
 
@@ -340,7 +337,7 @@
     g.addColorStop(0, rgba(col, 0.55 * al));
     g.addColorStop(1, rgba(col, 0));
     c.fillStyle = g; circle(c, x, y, rad * 4); c.fill();
-    c.fillStyle = rgba(col, Math.min(1, 0.25 + al));
+    c.fillStyle = rgba(col, Math.min(1, 0.12 + al));
     starPath(c, x, y, rad * 2.4, rad * 1.0, 0); c.fill();
 
 
