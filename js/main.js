@@ -304,16 +304,16 @@
 
   // Now and then (and at every launch) a short, thin flicker of exhaust from the nozzle: purely
   // decorative. A few fine streaks that grow, shimmer and fade within about half a second.
-  const PUFF_MS = 550;
+  const PUFF_MS = 900;
   let puffT = -1e9, nextPuff = 0;
   function exhaust(c, x, y, H, now) {
-    if (now > nextPuff) { puffT = now; nextPuff = now + 3000 + 6000 * Math.random(); }
+    if (now > nextPuff) { puffT = now; nextPuff = now + 2000 + 3500 * Math.random(); }
     const p = (now - puffT) / PUFF_MS;
     if (p < 0 || p > 1) return;
     const env = Math.sin(PI * p), w = 0.3 * H, bot = y + 0.3 * H;
     c.save();
     c.lineCap = 'round';
-    for (const [dx, len, ph] of [[0, 0.55, 0], [-0.16, 0.36, 2.1], [0.16, 0.36, 4.2]]) {
+    for (const [dx, len, ph] of [[0, 0.9, 0], [-0.18, 0.6, 2.1], [0.18, 0.6, 4.2]]) {
       const L = H * len * env * (0.8 + 0.2 * Math.sin(now / 37 + ph));
       const x0 = x + dx * w, x1 = x0 + dx * w * 0.6;
       const gr = c.createLinearGradient(x0, bot - 2, x1, bot + L);
@@ -321,7 +321,7 @@
       gr.addColorStop(0.3, `rgba(255,201,77,${0.8 * env})`);
       gr.addColorStop(0.65, `rgba(255,107,53,${0.5 * env})`);
       gr.addColorStop(1, 'rgba(255,107,53,0)');
-      c.strokeStyle = gr; c.lineWidth = Math.max(1, 0.06 * H);
+      c.strokeStyle = gr; c.lineWidth = Math.max(1.3, 0.08 * H);
       c.beginPath(); c.moveTo(x0, bot - 2); c.lineTo(x1, bot + L); c.stroke();   // starts under the hull
     }
     c.restore();
@@ -729,7 +729,7 @@
     label('Past', xn + 8, yn + 62, PEN.past, 'left', 0, 12, fade('penPast', yn + 66 < bot - 4));
     label('Future', xn + 8, yn - 70, PEN.future, 'left', 0, 12, fade('penFuture', yn - 84 > top + 4));
     {
-      const [hx, hy] = toXY(g, 0.32, 0);
+      const [hx, hy] = toXY(g, -0.42, 0);   // on the empty stretch past the apparent horizon
       label('event horizon', hx + 4, hy - 7, PEN.horizon, 'left', PI / 4, 11);
     }
     c.font = '700 12px "Space Mono", monospace';
