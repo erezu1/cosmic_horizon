@@ -13,7 +13,9 @@
   const MSG_PERIOD = 0.15 / DOP_LAUNCH;   // beacon proper time per message: one per 0.15ℓ of yours at launch
   const Z_LOST = 1e7;           // beyond this, treat a source as gone from view
   const N_STARS = 90;
-  const SQUASH_MIN = 0.12;        // galaxies are drawn at least this thick along the line of sight
+  // Drawn thickness along the line of sight: the true flattening f·u̇ spans several decades
+  // (≈1/50 … 0 at 0.999c), so it is shown on a log scale: 1 → 1, 1/1000 and below → 0.2.
+  const drawnSquash = q => 0.2 + 0.8 * Math.min(1, Math.max(0, 1 + Math.log10(Math.max(Math.abs(q), 1e-12)) / 3.5));
   const ICON_R = 6.5;             // px: outer radius of every galaxy and beacon icon (fixed; brightness only fades it)
   const BURST_TIME = 0.2;        // each pre-game star burst lasts this long (ℓ)…
   const BURST_STEPS = 8;         // …as this many sub-launches, each star carrying its share of the mass
@@ -256,13 +258,9 @@
     labelsOn = !$('beaconSheet').hidden;
     for (const s of S.sources) if (s.kind === 'beacon') drawBeacon(c, s, cx, cy, R, t);
 
-    // You.
+    // You: a little rocket, larger the more mass you still carry.
     const rm = 3 + 7 * mNow;
-    const go = c.createRadialGradient(cx, cy, 0, cx, cy, rm * 3);
-    go.addColorStop(0, 'rgba(255,240,210,0.9)');
-    go.addColorStop(1, 'rgba(255,200,120,0)');
-    c.fillStyle = go; circle(c, cx, cy, rm * 3); c.fill();
-    c.fillStyle = '#fff6e6'; circle(c, cx, cy, rm); c.fill();
+    rocket(c, cx, cy, 2.6 * rm + 10);
 
     // Launch flashes (just a UI cue at your position).
     S.flashes = S.flashes.filter(f => now - f.t < 700);
@@ -275,6 +273,43 @@
 
   }
 
+  // A rocket of height H centred on (x, y), nose up.
+  function rocket(c, x, y, H) {
+    const w = 0.34 * H, top = y - 0.5 * H, bot = y + 0.36 * H;
+    c.save();
+    c.lineJoin = 'round';
+    // fins
+    c.fillStyle = '#e8564f';
+    c.beginPath();
+    c.moveTo(x - 0.5 * w, bot - 0.32 * H); c.lineTo(x - 0.95 * w, bot + 0.1 * H); c.lineTo(x - 0.5 * w, bot); c.closePath();
+    c.moveTo(x + 0.5 * w, bot - 0.32 * H); c.lineTo(x + 0.95 * w, bot + 0.1 * H); c.lineTo(x + 0.5 * w, bot); c.closePath();
+    c.fill();
+    // body with a rounded nose
+    c.fillStyle = '#f2f4fb';
+    c.beginPath();
+    c.moveTo(x, top);
+    c.bezierCurveTo(x + 0.62 * w, top + 0.2 * H, x + 0.5 * w, top + 0.45 * H, x + 0.5 * w, bot);
+    c.lineTo(x - 0.5 * w, bot);
+    c.bezierCurveTo(x - 0.5 * w, top + 0.45 * H, x - 0.62 * w, top + 0.2 * H, x, top);
+    c.fill();
+    // nose cone
+    c.fillStyle = '#e8564f';
+    c.beginPath();
+    c.moveTo(x, top);
+    c.bezierCurveTo(x + 0.42 * w, top + 0.1 * H, x + 0.5 * w, top + 0.18 * H, x + 0.52 * w, top + 0.22 * H);
+    c.lineTo(x - 0.52 * w, top + 0.22 * H);
+    c.bezierCurveTo(x - 0.5 * w, top + 0.18 * H, x - 0.42 * w, top + 0.1 * H, x, top);
+    c.fill();
+    // window
+    c.fillStyle = '#5aa9e6';
+    c.strokeStyle = '#9aa6c4'; c.lineWidth = Math.max(1, 0.035 * H);
+    circle(c, x, y - 0.08 * H, 0.17 * w + 1); c.fill(); c.stroke();
+    // nozzle
+    c.fillStyle = '#9aa6c4';
+    c.fillRect(x - 0.28 * w, bot, 0.56 * w, 0.07 * H);
+    c.restore();
+  }
+
   function drawStar(c, s, cx, cy, R) {
     const e = s.obs;
     if (!e || e.z1 > Z_LOST) return;
@@ -284,10 +319,9 @@
     if (ui.ir) al = Math.max(al, 0.6 * irFade(e.z1));
     // Seen along your line of sight, the galaxy is flattened by f·u̇ (what light from its near
     // and far ends, arriving together now, implies); across the line of sight it keeps its size.
-    // Kept to at least SQUASH_MIN so it stays visible.
     c.save();
     c.translate(x, y); c.rotate(-s.phi);
-    c.scale(Math.max(SQUASH_MIN, Math.min(1, e.squash)), 1);
+    c.scale(drawnSquash(e.squash), 1);
     const g = c.createRadialGradient(0, 0, 0, 0, 0, ICON_R * 1.6);
     g.addColorStop(0, rgba(col, 0.45 * al));
     g.addColorStop(1, rgba(col, 0));
