@@ -16,9 +16,11 @@
   // Drawn thickness along the line of sight: the true flattening f·u̇ spans several decades
   // (≈1/50 … 0 at 0.999c), so it is shown on a log scale: 1 → 1, 1/1000 and below → 0.2.
   const drawnSquash = q => 0.2 + 0.8 * Math.min(1, Math.max(0, 1 + Math.log10(Math.max(Math.abs(q), 1e-12)) / 3.5));
-  const BEACON_R = 3.8;           // px: beacon ball radius
-  const GALAXY_GLOW = { r: 1.3, a: 0.18 }, BEACON_GLOW = { r: 2.4, a: 0.55 };   // halo radius (× ICON_R), strength
-  const ICON_R = 6.5;             // px: outer radius of every galaxy and beacon icon (fixed; brightness only fades it)
+  const GALAXY_GLOW = { r: 1.3, a: 0.18 }, BEACON_GLOW = { r: 2.4, a: 0.55 };   // halo radius (× iconR), strength
+  // Outer radius of every galaxy and beacon icon: fixed on a given screen (brightness only fades
+  // it), scaled with the size of the sky so icons keep their proportions on wide screens.
+  let iconR = 6.5;
+  const BEACON_FRAC = 0.58;       // beacon ball radius as a fraction of iconR
   const BURST_TIME = 0.2;        // each pre-game star burst lasts this long (ℓ)…
   const BURST_STEPS = 8;         // …as this many sub-launches, each star carrying its share of the mass
   const RING_N = 12;
@@ -182,6 +184,7 @@
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     const { cx, cy, R } = skyGeom();
     const st = S.st, aNow = st.aNow, mNow = st.mNow;
+    iconR = Math.max(6.5, 0.036 * R);
 
     c.fillStyle = '#0b1120';
     c.fillRect(0, 0, w, h);
@@ -253,7 +256,7 @@
 
     // You: a little rocket, larger the more mass you still carry.
     const rm = 3 + 7 * mNow;
-    rocket(c, cx, cy, 1.2 * rm + 8);
+    rocket(c, cx, cy, (1.2 * rm + 8) * iconR / 6.5);
 
     // Launch flashes (just a UI cue at your position).
     S.flashes = S.flashes.filter(f => now - f.t < 700);
@@ -284,7 +287,7 @@
 
   // Galaxies and beacons share one frame: centred on the image, flattened along your line of
   // sight by what light from the object's near and far ends implies (f·u̇, log-scaled), with a
-  // faint glow. drawFn draws the icon itself with outer radius ICON_R at the origin.
+  // faint glow. drawFn draws the icon itself with outer radius iconR at the origin.
   function iconFrame(c, s, cx, cy, R, irBoost, glow, drawFn) {
     const e = s.obs;
     if (!e || e.z1 > Z_LOST) return null;
@@ -296,17 +299,17 @@
     c.save();
     c.translate(x, y); c.rotate(-s.phi);
     c.scale(drawnSquash(e.squash), 1);
-    const g = c.createRadialGradient(0, 0, 0, 0, 0, ICON_R * glow.r);
+    const g = c.createRadialGradient(0, 0, 0, 0, 0, iconR * glow.r);
     g.addColorStop(0, rgba(col, glow.a * al));
     g.addColorStop(1, rgba(col, 0));
-    c.fillStyle = g; circle(c, 0, 0, ICON_R * glow.r); c.fill();
+    c.fillStyle = g; circle(c, 0, 0, iconR * glow.r); c.fill();
     drawFn(col, al);
     c.restore();
     return { x, y, al };
   }
 
   function drawStar(c, s, cx, cy, R) {
-    iconFrame(c, s, cx, cy, R, 0.6, GALAXY_GLOW, (col, al) => galaxy(c, 0, 0, ICON_R, s.rot, s.tilt, col, al));
+    iconFrame(c, s, cx, cy, R, 0.6, GALAXY_GLOW, (col, al) => galaxy(c, 0, 0, iconR, s.rot, s.tilt, col, al));
   }
 
   // A small two-armed spiral galaxy of outer radius R: bright bulge, logarithmic arms, tilted.
@@ -340,7 +343,7 @@
     // A small solid ball with a stronger glow, flattened like a galaxy.
     const p = iconFrame(c, s, cx, cy, R, 0.75, BEACON_GLOW, (col, al) => {
       c.fillStyle = rgba(col, al);
-      circle(c, 0, 0, BEACON_R); c.fill();
+      circle(c, 0, 0, BEACON_FRAC * iconR); c.fill();
     });
     if (!p) return;
     const { x, y, al } = p, e = s.obs;

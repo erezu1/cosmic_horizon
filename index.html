@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="style.css?v=50">
+<link rel="stylesheet" href="style.css?v=52">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -73,7 +73,6 @@
       <li><i style="background:#b9a7ff"></i>galaxies</li>
       <li><i style="background:linear-gradient(90deg,#ff8fd0,#8fe3ff,#c7ff8f)"></i>beacons</li>
       <li style="color:#ff5c8a"><i class="dash"></i><span style="color:#9fb0c8">apparent horizon</span></li>
-      <li style="color:#b9a7ff"><i class="dash"></i><span style="color:#9fb0c8">predicted (if you emit nothing more)</span></li>
     </ul>
 
     <div class="toolbar glass">
@@ -142,7 +141,7 @@
 
     <h3>The Penrose diagram</h3>
     <p>The diagram uses null coordinates $U = e^{\tau_{\text{out}}/\ell}$ and $V = \mp e^{-\tau_{\text{in}}/\ell}$, where $\tau_{\text{out}}$ ($\tau_{\text{in}}$) is your clock reading when the outgoing (ingoing) light ray through a point leaves (reaches) you, compactified with $\arctan$. Light always moves at 45°. Your worldline is $UV=-1$, $\mathscr{I}^+$ is $UV=1$, and the event horizon is $V=0$.</p>
-    <p>Solid worldlines are already determined: they lie inside your current future light cone's past, $u \le u_{\text{now}}$. Dashed continuations are predictions that assume you emit nothing more. A later shell will bend them.</p>
+    <p>Worldlines are drawn up to your future light cone, $u \le u_{\text{now}}$, the part already fixed by what you have emitted; beyond it they are continued assuming you emit nothing more (dashed). Everything you launch moves at $0.999c$, almost along a light ray, so its whole path out to $\mathscr{I}^+$ is fixed within about $0.05\ell$ of your time after launch and the dashed part is rarely visible.</p>
     <p><b>Now</b> (the default) applies $U\to U e^{-\tau/\ell},\ V\to V e^{\tau/\ell}$, a translation in static time that leaves your worldline and $\mathscr{I}^+$ fixed. The present sits mid-left, and the earlier history is squeezed against the past horizon. Once you have radiated all your mass, the neighbourhood of now is visibly the static patch of empty de Sitter.</p>
 
     <h3>Launching</h3>
@@ -161,8 +160,8 @@
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="js/physics.js?v=50"></script>
-<script src="js/colors.js?v=50"></script>
-<script src="js/main.js?v=50"></script>
+<script src="js/physics.js?v=52"></script>
+<script src="js/colors.js?v=52"></script>
+<script src="js/main.js?v=52"></script>
 </body>
 </html>

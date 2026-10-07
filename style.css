@@ -75,7 +75,7 @@ svg { width: 20px; height: 20px; display: block; }
 #hud .u { color: var(--muted); font-size: 11px; }
 
 #hint {
-  position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%);
+  position: absolute; left: 50%; top: 8px; transform: translateX(-50%);
   border-radius: var(--r); padding: 8px 14px; pointer-events: none; white-space: nowrap;
   font: 400 12px var(--mono); letter-spacing: 0.04em; transition: opacity 0.6s;
 }
