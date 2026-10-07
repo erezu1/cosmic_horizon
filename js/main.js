@@ -442,7 +442,7 @@
     past: '#ffc94d', pastFill: 'rgba(255,201,77,0.16)',
     future: '#7ec8ff', futureFill: 'rgba(126,200,255,0.11)',
     horizon: '#ff5c8a', horizonDim: 'rgba(255,92,138,0.75)',
-    you: '#3fc1c9',
+    you: '#3fc1c9', rc0: 'rgba(243,234,216,0.7)',
     now: '#f3ead8', galaxy: 'rgba(185,167,255,0.6)', galaxyFuture: 'rgba(185,167,255,0.28)',
     beacon: '#ff6b35', beaconFuture: 'rgba(255,107,53,0.45)',
   };
@@ -486,6 +486,12 @@
       ah.push(seg);
     }
     S.pen.ah = ah;
+    // The curve r = r_c,0: the apparent-horizon radius when the game started (τ = 0).
+    const rc0 = st.aR[st.region(st.uOfTau(0))], rcl = [];
+    for (let u = Math.min(-12, (st.shellU.length ? st.shellU[0] : 0) - 8); u <= st.uOfTau(0) + 60; u += 0.1) {
+      rcl.push([st.tau(u), ...st.labelVlog(u, rc0)]);
+    }
+    S.pen.rc0 = rcl;
     S.pen.ver = st.version;
   }
 
@@ -603,6 +609,11 @@
     c.strokeStyle = PEN.future;
     c.lineWidth = 2.4;
     { const [x1, y1] = toXY(g, Pn, Qn), [x2, y2] = toXY(g, Pn, HALF - Pn); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
+
+    // r = r_c,0 (dotted, cream): where the horizon was when the game started.
+    c.strokeStyle = PEN.rc0; c.lineWidth = 1.6; c.setLineDash([2, 4]);
+    { const L = S.pen.rc0; strokeRaw(c, g, L.map(p => p[0]), L.map(p => p[1]), L.map(p => p[2])); }
+    c.setLineDash([]);
 
     // Apparent horizon (dashed) and event horizon V = 0 (solid): the same hot colour.
     c.strokeStyle = PEN.horizonDim;
