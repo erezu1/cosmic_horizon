@@ -730,7 +730,7 @@
     label('Past', xn + 8, yn + 62, PEN.past, 'left', 0, 12, fade('penPast', yn + 66 < bot - 4));
     label('Future', xn + 8, yn - 70, PEN.future, 'left', 0, 12, fade('penFuture', yn - 84 > top + 4));
     {
-      const [hx, hy] = toXY(g, -0.42, 0);   // on the empty stretch past the apparent horizon
+      const [hx, hy] = toXY(g, 1.36, 0);    // up in your future, clear of the worldlines
       label('event horizon', hx + 4, hy - 7, PEN.horizon, 'left', PI / 4, 11);
     }
     c.font = '700 12px "Space Mono", monospace';
