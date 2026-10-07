@@ -100,13 +100,19 @@
     updateList();
   }
 
+  // Running out: first your mass is gone (but it is still out there and you still see it); then,
+  // once everything you can see has redshifted past 1 mm, your universe is empty de Sitter.
+  const MSG_SPENT = 'No mass left: everything you had is on its way out.';
+  const MSG_COLD = 'Everything you see has faded into microwaves. Your universe is empty de Sitter now. You will die cold and alone.';
+  const LAM_COLD = 1e6;   // nm
+
   // Every launch is a shell: RING_N beacons evenly spaced, at a random overall rotation.
   function fire() {
     const st = S.st;
     // What you launch carries the mass: a thin shell leaving with the ring of beacons.
     // You can only give away mass you still have (the last launch takes the remainder).
     if (st.mNow <= 1e-9 && ui.dm > 0) {
-      showHint('No mass left: you are empty de Sitter now. You will die alone.', 3500);
+      showHint(MSG_SPENT, 3500);
       return;
     }
     const dm = Math.min(ui.dm, st.mNow);
@@ -126,7 +132,7 @@
     }
     S.flashes.push({ t: performance.now(), dm });
     nextPuff = 0;                                   // a puff of exhaust with every launch
-    showHint(null);
+    if (st.mNow <= 1e-9) showHint(MSG_SPENT, 4500); else showHint(null);
     step();
     updateList();
   }
@@ -147,6 +153,10 @@
       s.obs = e;
       if (s.kind === 'beacon') s.msg = Math.max(s.msg, Math.floor(e.tau / MSG_PERIOD));
       if (e.z1 > Z_LOST && s.wl.done) { s.gone = true; s.obs = null; }
+    }
+    if (!S.cold && st.mNow <= 1e-9 && S.sources.every(s => !s.obs || s.obs.lam > LAM_COLD || s.obs.z1 > Z_LOST)) {
+      S.cold = true;
+      showHint(MSG_COLD, 8000);
     }
   }
 
