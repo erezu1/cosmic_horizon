@@ -4,7 +4,7 @@
   const $ = id => document.getElementById(id);
   const PI = Math.PI, HALF = PI / 2, TAU = 2 * PI;
 
-  const SEEN_AT_LAUNCH = 450;   // nm: beacons are tuned so you first receive them blue
+  const SEEN_AT_LAUNCH = 260;   // nm: beacons are tuned so you first receive them in the UV (white-hot)
   // Everything you launch leaves at nearly the speed of light, so the mass it carries travels
   // with it as a null shell (exact Vaidya, up to 1 − v = 0.1%), yet it can still signal back.
   const V_LAUNCH = 0.999;
@@ -81,7 +81,7 @@
           sources.push({
             kind: 'star', phi: off + TAU * (j + 0.8 * (rnd() - 0.5)) / perBurst,
             wl: new Worldline(u, 0, g * (1 - v) / a, 0),
-            lamEm: (380 + 110 * rnd()) / dop, size: STAR_SIZE, jit: rnd(), rot: 0.25 * (rnd() - 0.5),
+            lamEm: (260 + 220 * rnd()) / dop, size: STAR_SIZE, jit: rnd(), rot: 0.25 * (rnd() - 0.5),
             hint: 1e9, obs: null, pq: newPQ(), tail: null,
           });
         }
@@ -157,7 +157,12 @@
     return { w, h, dpr };
   }
   const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
-  const brightness = z1 => Math.min(1, 1.4 * Math.pow(z1, -0.5));
+  // Brightness falls with the redshift accumulated since launch (the launch Doppler factor is
+  // built into the tuned transmitters); light still near the UV is at full, white-hot brightness.
+  const brightness = (z1, lam) => {
+    const b = Math.min(1, 1.4 * Math.pow(z1 / DOP_LAUNCH, -0.5));
+    return lam < 420 ? Math.max(b, 1 - (lam - 260) / 400) : b;
+  };
 
   function circle(c, x, y, r) { c.beginPath(); c.arc(x, y, Math.max(0, r), 0, TAU); }
 
@@ -274,7 +279,7 @@
     if (!e || e.z1 > Z_LOST) return;
     const x = cx + e.r * R * Math.cos(s.phi), y = cy - e.r * R * Math.sin(s.phi);
     const col = Colors.rgb(e.lam, ui.ir);
-    let al = brightness(e.z1);
+    let al = brightness(e.z1, e.lam);
     if (ui.ir) al = Math.max(al, 0.6);
     const rad = s.size * (0.6 + 0.6 * al);
     const g = c.createRadialGradient(x, y, 0, x, y, rad * 4);
@@ -305,7 +310,7 @@
     const x = cx + dist * cos, y = cy - dist * sin;
     const col = Colors.rgb(e.lam, ui.ir);
     const band = Colors.band(e.lam);
-    let al = Math.max(0.22, brightness(e.z1));
+    let al = Math.max(0.22, brightness(e.z1, e.lam));
     if (ui.ir) al = Math.max(al, 0.75);
     const dash = ui.ir ? [] : band === 'infrared' ? [3, 2] : (band === 'microwave' || band === 'radio') ? [1, 3] : [];
 
@@ -404,7 +409,7 @@
       const x = X(e.lam);
       if (x < x0 || x > x1) continue;
       if (s.kind === 'star') {
-        c.fillStyle = `rgba(230,236,255,${0.25 + 0.5 * brightness(e.z1)})`;
+        c.fillStyle = `rgba(230,236,255,${0.25 + 0.5 * brightness(e.z1, e.lam)})`;
         circle(c, x, top + 4 + s.jit * (bot - top - 8), 1.3); c.fill();
       } else {
         const y = top + 6 + s.jit * (bot - top - 12);

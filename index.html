@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
-<link rel="stylesheet" href="style.css?v=30">
+<link rel="stylesheet" href="style.css?v=31">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -126,7 +126,7 @@
     <h3>Colour and redshift</h3>
     <p>Between shells, light moves along $v = u + 2r_*(r)=\text{const}$ with $dr_*/dr = 1/f$. Ray tracing through every shell the light crossed gives the exact redshift</p>
     $$\begin{gathered} 1+z = \frac{d\tau_{\text{you}}}{d\tau_{\text{src}}} = \frac{\sqrt{1-8GM_{\text{now}}}}{\dot u\, f\, D},\\ D=\frac{dv}{du_{\text{arr}}}, \end{gathered}$$
-    <p>where $\dot u$ is the source's $du/d\tau$ at emission, and $D$ picks up a factor $f_{\text{new}}/f_{\text{old}}$ at each shell crossing. At launch the beacons' light reaches you stretched by $\sqrt{(1+v)/(1-v)} \approx 45$, so they transmit in the far UV, tuned so you first receive them at 450 nm. The numbers count messages, sent at a rate that reaches you as one per $0.15\,\ell$ at launch.</p>
+    <p>where $\dot u$ is the source's $du/d\tau$ at emission, and $D$ picks up a factor $f_{\text{new}}/f_{\text{old}}$ at each shell crossing. At launch the beacons' light reaches you stretched by $\sqrt{(1+v)/(1-v)} \approx 45$, so they transmit in the far UV, tuned so you first receive them in the near UV (white-hot): they then cool through blue, green and red into the infrared. The numbers count messages, sent at a rate that reaches you as one per $0.15\,\ell$ at launch.</p>
 
     <h3>The three circles</h3>
     <ul>
@@ -158,8 +158,8 @@
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="js/physics.js?v=30"></script>
-<script src="js/colors.js?v=30"></script>
-<script src="js/main.js?v=30"></script>
+<script src="js/physics.js?v=31"></script>
+<script src="js/colors.js?v=31"></script>
+<script src="js/main.js?v=31"></script>
 </body>
 </html>
