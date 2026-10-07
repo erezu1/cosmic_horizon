@@ -791,6 +791,8 @@
   }
 
   reset();
+  // The opening hint fades out after 7 s (or on the first launch).
+  setTimeout(() => $('hint').classList.add('hidden'), 7000);
   { const v = store.get('view'); setView(v === 'penrose' || v === 'sky' || v === 'both' ? v : (wideMQ.matches ? 'both' : 'sky')); }
   setHUD(store.get('hud') === '1');
   setPenMode(penMode);
