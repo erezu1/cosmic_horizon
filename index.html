@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="style.css?v=52">
+<link rel="stylesheet" href="style.css?v=53">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -71,7 +71,7 @@
     <canvas id="spectrum" aria-label="Received wavelengths"></canvas>
     <ul id="legend" class="legend" hidden>
       <li><i style="background:#b9a7ff"></i>galaxies</li>
-      <li><i style="background:linear-gradient(90deg,#ff8fd0,#8fe3ff,#c7ff8f)"></i>beacons</li>
+      <li><i style="background:#ff6b35"></i>beacons</li>
       <li style="color:#ff5c8a"><i class="dash"></i><span style="color:#9fb0c8">apparent horizon</span></li>
     </ul>
 
@@ -133,8 +133,8 @@
     <h3>The three circles</h3>
     <ul>
       <li><b>$r = \ell$, outer dotted circle (empty dS).</b> The horizon of empty de Sitter space, and the largest your horizon can ever get: you reach it once you have radiated all your mass.</li>
-      <li><b>$r_c$, dashed circle (horizon).</b> The cosmological horizon set by your mass now, $r_c = \ell\sqrt{1-8GM}$. It jumps outward the moment you emit. If you emit nothing more, this is where your event horizon ends up. When the visible edge has caught up with it, the two coincide and only one circle is drawn.</li>
-      <li><b>Solid circle (visible edge).</b> The farthest areal radius that light reaching your eye right now started from: the outermost point of your past light cone. Nothing you see can lie outside it. After an emission at time $\tau_e$ it catches up with $r_c$ as light from the newly enclosed region arrives:
+      <li><b>$r_c$, dashed circle (apparent horizon).</b> The apparent horizon now: where ingoing light momentarily stands still for your present mass, $r_c = \ell\sqrt{1-8GM}$. It jumps outward the moment you emit. If you emit nothing more, this is where your event horizon ends up. When the visible edge has caught up with it, the two coincide and only one circle is drawn.</li>
+      <li><b>Solid circle (visible edge).</b> The farthest areal radius that light reaching your eye right now started from: the outermost point of your past light cone. It is where your past light cone crosses the apparent horizon; in the Penrose diagram, where the gold line meets the dashed pink staircase (marked with a small pink ring after a launch). Nothing you see can lie outside it. After an emission at time $\tau_e$ it catches up with $r_c$ as light from the newly enclosed region arrives:
       $$\begin{gathered} r_{\text{edge}} = \max\!\Bigl(r_c^{\text{old}},\; r_c^{\text{new}}\tanh\tfrac{\tau-\tau_e}{2\ell}\Bigr). \end{gathered}$$</li>
     </ul>
     <p>The faint dotted rings inside are your earlier horizons, $r_c$ at each of your earlier masses.</p>
@@ -160,8 +160,8 @@
 
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
-<script src="js/physics.js?v=52"></script>
-<script src="js/colors.js?v=52"></script>
-<script src="js/main.js?v=52"></script>
+<script src="js/physics.js?v=53"></script>
+<script src="js/colors.js?v=53"></script>
+<script src="js/main.js?v=53"></script>
 </body>
 </html>

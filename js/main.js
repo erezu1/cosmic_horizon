@@ -238,7 +238,7 @@
     c.font = '700 11px "Space Mono", monospace';
     c.fillStyle = '#ff5c8a';
     const ly = cy - rh - 8 < 12 ? cy - rh + 16 : cy - rh - 8;
-    c.fillText(`HORIZON  r꜀ = ${aNow.toFixed(3)} ℓ`, cx, ly);
+    c.fillText(`APPARENT HORIZON  r꜀ = ${aNow.toFixed(3)} ℓ`, cx, ly);
     if (catching) {
       // Just below the solid circle, on a dark pill so it stays legible over the dashed r_c.
       const txt = `VISIBLE EDGE ${rEdge.toFixed(3)} ℓ`;
@@ -406,7 +406,7 @@
         circle(c, x, top + 4 + s.jit * (bot - top - 8), 1.3); c.fill();
       } else {
         const y = top + 6 + s.jit * (bot - top - 12);
-        c.fillStyle = `hsl(${s.hue},85%,68%)`;
+        c.fillStyle = PEN.beacon;
         c.beginPath(); c.moveTo(x, y - 5); c.lineTo(x + 4, y + 3); c.lineTo(x - 4, y + 3); c.closePath(); c.fill();
       }
     }
@@ -424,6 +424,7 @@
     future: '#7ec8ff', futureFill: 'rgba(126,200,255,0.11)',
     horizon: '#ff5c8a', horizonDim: 'rgba(255,92,138,0.75)',
     now: '#f3ead8', galaxy: 'rgba(185,167,255,0.6)', galaxyFuture: 'rgba(185,167,255,0.28)',
+    beacon: '#ff6b35', beaconFuture: 'rgba(255,107,53,0.45)',
   };
   function toXY(g, P, Q) { return [g.cx + (Q - P) * g.s, g.cy - (P + Q) * g.s]; }
 
@@ -572,14 +573,14 @@
       if (s.kind !== 'beacon') continue;
       updatePQ(s);
       if (refreshTails || !s.tail) { if (!s.gone || !s.tail || s.tail.ver !== st.version) updateTail(s); }
-      drawWorldline(c, g, s, `hsla(${s.hue},85%,70%,0.95)`, `hsla(${s.hue},85%,70%,0.45)`);
+      drawWorldline(c, g, s, PEN.beacon, PEN.beaconFuture);
     }
 
     // Apparent horizon (dashed) and event horizon V = 0 (solid): the same hot colour.
     c.strokeStyle = PEN.horizonDim;
     c.lineWidth = 2;
     c.setLineDash([6, 5]);
-    for (const seg of S.pen.ah) strokeRaw(c, g, seg.map(p => p[0]), seg.map(p => p[1]), seg.map(p => p[2]));
+    { const all = S.pen.ah.flat(); strokeRaw(c, g, all.map(p => p[0]), all.map(p => p[1]), all.map(p => p[2])); }
     c.setLineDash([]);
     c.strokeStyle = PEN.horizon;
     c.lineWidth = 3;
@@ -593,12 +594,29 @@
     c.lineWidth = 2.4;
     { const [x1, y1] = toXY(g, Pn, Qn), [x2, y2] = toXY(g, Pn, HALF - Pn); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
 
+    // The visible edge: where your past light cone crosses the apparent-horizon staircase. After a
+    // launch this is on a jump of the staircase (a shell), between the old and the new r_c.
+    {
+      let best = null;
+      for (const sg of S.cone.segs) {
+        if (sg.uLo === -Infinity) continue;
+        const r = DS.rOf((sg.v - sg.uLo) / 2, sg.a, sg.side);
+        const kIn = st.region(sg.uLo) - 1;           // region just before this shell
+        if (kIn >= 0 && r > st.aR[kIn] + 1e-6 && (!best || r > best.r)) best = { u: sg.uLo, r };
+      }
+      if (best) {
+        const [x, y] = toXY(g, mapP(st.tau(best.u)), mapQ(...st.labelVlog(best.u - 1e-9, best.r)));
+        c.strokeStyle = PEN.horizon; c.lineWidth = 2;
+        circle(c, x, y, 5); c.stroke();
+      }
+    }
+
     // What you are seeing right now: emission events on the past cone.
     for (const s of S.sources) {
       const e = s.obs;
       if (!e || e.z1 > Z_LOST || (s.kind === 'star' && !ui.stars)) continue;
       const [x, y] = toXY(g, mapP(st.tau(e.u)), mapQ(...st.labelVlog(e.u, e.r)));
-      c.fillStyle = s.kind === 'star' ? PEN.galaxy : `hsl(${s.hue},85%,70%)`;
+      c.fillStyle = s.kind === 'star' ? PEN.galaxy : PEN.beacon;
       circle(c, x, y, s.kind === 'star' ? 1.8 : 3); c.fill();
     }
     c.restore();
@@ -652,7 +670,7 @@
     if (!bs.length) { el.innerHTML = '<p class="muted">No beacons yet. Tap the sky to launch one.</p>'; return; }
     el.innerHTML = bs.map(s => {
       const e = s.obs;
-      const sw = `<span class="sw" style="background:hsl(${s.hue},85%,68%)"></span>`;
+      const sw = `<span class="sw" style="background:${PEN.beacon}"></span>`;
       const head = `${sw}<b>B${s.id}</b>`;
       if (!e || e.z1 > Z_LOST) {
         const why = s.wl.absorbed ? 'fell back into you' : 'gone: 1+z &gt; 10⁷';
