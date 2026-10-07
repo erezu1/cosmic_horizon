@@ -34,7 +34,6 @@
     ui.speed = Math.pow(10, +$('speed').value);
     ui.dm = +$('dm').value;
     ui.m0 = +$('m0').value;
-    ui.ir = $('ir').checked;
     ui.oldH = $('oldH').checked;
     ui.stars = $('galaxies').checked;
     $('speedVal').textContent = ui.speed.toFixed(2) + ' ℓ/c per s';
@@ -42,7 +41,7 @@
     const pending = S && Math.abs(ui.m0 - S.m0) > 1e-9;
     $('m0Val').textContent = ui.m0.toFixed(2) + ' c²/8G' + (pending ? ' · on reset' : '');
   }
-  for (const id of ['speed', 'dm', 'm0', 'ir', 'oldH', 'galaxies']) $(id).addEventListener('input', readUI);
+  for (const id of ['speed', 'dm', 'm0', 'oldH', 'galaxies']) $(id).addEventListener('input', readUI);
 
   // ---------- state ----------
   let S = null;
@@ -624,8 +623,8 @@
       }
       if (best) {
         const [x, y] = toXY(g, mapP(st.tau(best.u)), mapQ(...st.labelVlog(best.u - 1e-9, best.r)));
-        c.strokeStyle = PEN.horizon; c.lineWidth = 2;
-        circle(c, x, y, 5); c.stroke();
+        c.fillStyle = PEN.horizon; c.strokeStyle = PEN.halo; c.lineWidth = 2;
+        circle(c, x, y, 5); c.fill(); c.stroke();
       }
     }
 
@@ -811,6 +810,7 @@
     syncSeg($('vSky').parentElement);
     setShown(sky, showSky); setShown(pen, showPen);
     setShown($('legend'), showPen); setShown($('penZoom'), showPen);
+    setShown($('irBtn'), showSky);
     if (showPen) syncSeg($('penZoom'), true);
     updateHint();
     store.set('view', v);
@@ -819,6 +819,14 @@
   $('vBoth').addEventListener('click', () => setView('both'));
   wideMQ.addEventListener('change', () => { if (view === 'both' && !wideMQ.matches) setView('sky'); });
   $('vPen').addEventListener('click', () => setView('penrose'));
+
+  // Infrared camera: a toggle on the sky (false colours over the whole spectrum).
+  function setIR(on) {
+    ui.ir = on;
+    $('irBtn').setAttribute('aria-pressed', String(on));
+    store.set('ir', on ? '1' : '0');
+  }
+  $('irBtn').addEventListener('click', () => setIR(!ui.ir));
 
   function setHUD(on) {
     setShown($('hud'), on);
@@ -887,6 +895,7 @@
   reset();
   { const v = store.get('view'); setView(v === 'penrose' || v === 'sky' || v === 'both' ? v : (wideMQ.matches ? 'both' : 'sky')); }
   setHUD(store.get('hud') === '1');
+  setIR(store.get('ir') === '1');
   setPenMode(penMode);
   syncSegs(true);
   // The opening hint fades out after 7 s (or on the first launch).
