@@ -489,7 +489,7 @@
     // The curve r = r_c,0, the visible edge when the game started: an observer holding still at that
     // distance from you. Kept with its timelike flag (r < r_c of that era); trimmed to your past when drawn.
     const rc0 = S.rc0, rcl = [];
-    for (let u = Math.min(-12, (st.shellU.length ? st.shellU[0] : 0) - 8); u <= st.uOfTau(0) + 60; u += 0.05) {
+    for (let u = Math.min(-40, (st.shellU.length ? st.shellU[0] : 0) - 30); u <= st.uOfTau(0) + 60; u += 0.05) {
       const k = st.region(u);
       rcl.push([st.tau(u), ...st.labelVlog(u, rc0), rc0 < st.aR[k]]);
     }
@@ -613,19 +613,22 @@
     { const [x1, y1] = toXY(g, Pn, Qn), [x2, y2] = toXY(g, Pn, HALF - Pn); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
 
     // r = r_c,0 (solid cream line).
-    // Only the part in your past (before now, inside your past light cone) where it is timelike.
+    // Only the part in your past (its light has reached you). Solid where it is timelike (inside the
+    // horizon of that era); dashed where that radius was beyond the horizon, so r = const is spacelike.
     c.strokeStyle = PEN.rc0; c.lineWidth = 2.6;
-    {
+    for (const want of [true, false]) {
       let on = false;
+      c.setLineDash(want ? [] : [5, 5]);
       c.beginPath();
       for (const [lnU, sg, t, timelike] of S.pen.rc0) {
-        const ok = timelike && sg < 0 && t <= S.tau;   // its light has reached you: V = −e^{−t} ≤ V_now
+        const ok = timelike === want && sg < 0 && t <= S.tau;   // V = −e^{−t} ≤ V_now: in your past
         if (!ok) { on = false; continue; }
         const [x, y] = toXY(g, mapP(lnU), mapQ(sg, t));
         if (on) c.lineTo(x, y); else { c.moveTo(x, y); on = true; }
       }
       c.stroke();
     }
+    c.setLineDash([]);
 
     // Apparent horizon (dashed) and event horizon V = 0 (solid): the same hot colour.
     c.strokeStyle = PEN.horizonDim;
