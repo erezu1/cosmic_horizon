@@ -442,7 +442,7 @@
     past: '#ffc94d', pastFill: 'rgba(255,201,77,0.16)',
     future: '#7ec8ff', futureFill: 'rgba(126,200,255,0.11)',
     horizon: '#ff5c8a', horizonDim: 'rgba(255,92,138,0.75)',
-    you: '#3fc1c9', rc0: 'rgba(243,234,216,0.7)',
+    you: '#3fc1c9', rc0: 'rgba(243,234,216,0.85)',
     now: '#f3ead8', galaxy: 'rgba(185,167,255,0.6)', galaxyFuture: 'rgba(185,167,255,0.28)',
     beacon: '#ff6b35', beaconFuture: 'rgba(255,107,53,0.45)',
   };
@@ -610,10 +610,10 @@
     c.lineWidth = 2.4;
     { const [x1, y1] = toXY(g, Pn, Qn), [x2, y2] = toXY(g, Pn, HALF - Pn); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
 
-    // r = r_c,0 (dotted, cream): where the horizon was when the game started.
-    c.strokeStyle = PEN.rc0; c.lineWidth = 1.6; c.setLineDash([2, 4]);
+    // r = r_c,0: a solid cream line, wider than and drawn under the horizons. Before any launch it lies
+    // on the event horizon, which then shows as pink with a cream edge; afterwards the two separate.
+    c.strokeStyle = PEN.rc0; c.lineWidth = 6;
     { const L = S.pen.rc0; strokeRaw(c, g, L.map(p => p[0]), L.map(p => p[1]), L.map(p => p[2])); }
-    c.setLineDash([]);
 
     // Apparent horizon (dashed) and event horizon V = 0 (solid): the same hot colour.
     c.strokeStyle = PEN.horizonDim;
