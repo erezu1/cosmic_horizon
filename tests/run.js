@@ -168,5 +168,24 @@ for (const m0 of [0, 0.75]) {
   if (!(w.absorbed && w.U.length < 5000)) failures++;
 }
 
+// 11. After a shell, images of objects launched earlier freeze where each crossed the event horizon,
+//     which (for u < u_s) is the ingoing ray that reaches r_c(new) exactly at the shell.
+{
+  const v = 0.999, g = 1 / Math.sqrt(1 - v * v);
+  const st = new Spacetime(0.64);
+  const aOld = st.aR[0];
+  const launch = tau => { const u = st.uOfTau(tau); return new Worldline(u, 0, g * (1 - v) / st.aR[st.region(u)], 0); };
+  const olds = [-3, -1, -0.3].map(launch);
+  st.addShell(st.uOfTau(0), 0.25);
+  const aNew = st.aNow, uS = st.shellU[0];
+  const EH = u => aOld / Math.tanh(aOld * (rstar(aNew, aOld) + (uS - u) / 2));
+  const u = st.uOfTau(14), cone = st.pastCone(u);
+  olds.forEach((w, i) => {
+    w.advance(st, u);
+    const e = findEmission(w, cone, st, 0);
+    check(`frozen image = event horizon at crossing (#${i})`, e.r, EH(w.U[0]), 1e-3);
+  });
+}
+
 console.log(failures ? `\n${failures} FAILED` : '\nall passed');
 process.exit(failures ? 1 : 0);
