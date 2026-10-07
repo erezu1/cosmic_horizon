@@ -106,7 +106,7 @@
     // What you launch carries the mass: a thin shell leaving with the ring of beacons.
     // You can only give away mass you still have (the last launch takes the remainder).
     if (st.mNow <= 1e-9 && ui.dm > 0) {
-      showHint('No mass left: you are empty de Sitter now', 2500);
+      showHint('No mass left: you are empty de Sitter now. You will die alone.', 3500);
       return;
     }
     const dm = Math.min(ui.dm, st.mNow);
