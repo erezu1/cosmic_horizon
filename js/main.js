@@ -655,23 +655,6 @@
     c.lineWidth = 3;
     { const [x1, y1] = toXY(g, HALF, 0), [x2, y2] = toXY(g, -HALF, 0); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
 
-    // The visible edge: where your past light cone crosses the apparent-horizon staircase. After a
-    // launch this is on a jump of the staircase (a shell), between the old and the new r_c.
-    {
-      let best = null;
-      for (const sg of S.cone.segs) {
-        if (sg.uLo === -Infinity) continue;
-        const r = DS.rOf((sg.v - sg.uLo) / 2, sg.a, sg.side);
-        const kIn = st.region(sg.uLo) - 1;           // region just before this shell
-        if (kIn >= 0 && r > st.aR[kIn] + 1e-6 && (!best || r > best.r)) best = { u: sg.uLo, r };
-      }
-      if (best) {
-        const [x, y] = toXY(g, mapP(st.tau(best.u)), mapQ(...st.labelVlog(best.u - 1e-9, best.r)));
-        c.fillStyle = PEN.horizon; c.strokeStyle = PEN.halo; c.lineWidth = 2;
-        circle(c, x, y, 5); c.fill(); c.stroke();
-      }
-    }
-
     // What you are seeing right now: emission events on the past cone.
     for (const s of S.sources) {
       const e = s.obs;
@@ -725,6 +708,27 @@
     c.textAlign = 'center';
     c.fillText('you', 0, 0);
     c.restore();
+
+    // The visible edge: the outermost point of your past light cone, on the apparent horizon. After a
+    // launch it is on a jump of the staircase (a shell), between the old and the new r_c; before your
+    // light cone reaches the first shell it is where the cone meets the past horizon U = 0 (r = r_c,0).
+    // Drawn on top of the lines, under the Now dot.
+    {
+      let best = null;
+      for (const sg of S.cone.segs) {
+        if (sg.uLo === -Infinity) { if (!best || sg.a > best.r + 1e-6) best = { u: -Infinity, r: sg.a }; continue; }
+        const r = DS.rOf((sg.v - sg.uLo) / 2, sg.a, sg.side);
+        const kIn = st.region(sg.uLo) - 1;           // region just before this shell
+        if (kIn >= 0 && r > st.aR[kIn] + 1e-6 && (!best || r > best.r)) best = { u: sg.uLo, r };
+      }
+      if (best) {
+        const [x, y] = best.u === -Infinity
+          ? toXY(g, 0, Qn)                                                    // U = 0, V = V_now
+          : toXY(g, mapP(st.tau(best.u)), mapQ(...st.labelVlog(best.u - 1e-9, best.r)));
+        c.fillStyle = PEN.horizon; c.strokeStyle = PEN.halo; c.lineWidth = 2;
+        circle(c, x, y, 5); c.fill(); c.stroke();
+      }
+    }
 
     // The Now dot goes on top of everything.
     c.fillStyle = PEN.now; c.strokeStyle = PEN.halo; c.lineWidth = 2.5;
