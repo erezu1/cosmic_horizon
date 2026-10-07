@@ -103,7 +103,7 @@
   // Running out: first your mass is gone (but it is still out there and you still see it); then,
   // once everything you can see has redshifted past 1 mm, your universe is empty de Sitter.
   const MSG_SPENT = 'No mass left: everything you had is on its way out.';
-  const MSG_COLD = 'Everything you see has faded into microwaves. Your universe is empty de Sitter now. You will die cold and alone.';
+  const MSG_COLD = 'Your universe is empty de Sitter now. You will die cold and alone.';
   const LAM_COLD = 1e6;   // nm
 
   // Every launch is a shell: RING_N beacons evenly spaced, at a random overall rotation.
@@ -778,7 +778,7 @@
   function updateList() {
     const bs = S.sources.filter(s => s.kind === 'beacon').slice(-16).reverse();
     const el = $('beacons');
-    if (!bs.length) { el.innerHTML = '<p class="muted">No beacons yet. Tap the sky to launch one.</p>'; return; }
+    if (!bs.length) { el.innerHTML = '<p class="muted">No beacons yet. Tap to launch a shell.</p>'; return; }
     el.innerHTML = bs.map(s => {
       const e = s.obs;
       const sw = `<span class="sw" style="background:${PEN.beacon}"></span>`;
@@ -839,8 +839,8 @@
 
   // The hint at the top of the sky: shown for a while, only over the sky.
   let hintOn = false;
-  const defaultHint = () => 'Tap the sky to emit a shell of 12 beacons';
-  function updateHint() { setShown($('hint'), hintOn && view !== 'penrose'); }
+  const defaultHint = () => 'Tap to emit a shell of 12 beacons';
+  function updateHint() { setShown($('hint'), hintOn); }
   function showHint(text, ms) {
     clearTimeout(showHint._t);
     hintOn = text != null;
@@ -862,6 +862,8 @@
     if (Math.hypot(x - cx, y - cy) < 2) return;
     fire();
   });
+  // The launch is spherically symmetric, so where you tap on the Penrose diagram does not matter.
+  pen.addEventListener('pointerdown', () => fire());
 
   function setPlaying(p) {
     S.playing = p;

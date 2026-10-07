@@ -78,7 +78,7 @@ svg { width: 20px; height: 20px; display: block; }
   position: absolute; inset: 0; width: 100%; height: 100%; display: block; --fx-dy: 0px;   /* views crossfade */
   transition: width var(--t) var(--ease), left var(--t) var(--ease), right var(--t) var(--ease);
 }
-#sky { cursor: crosshair; touch-action: manipulation; }
+#sky, #penrose { cursor: crosshair; touch-action: manipulation; }
 #view canvas[hidden] { display: none; }
 
 #hud {
