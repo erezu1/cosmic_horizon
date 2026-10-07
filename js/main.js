@@ -60,7 +60,7 @@
   // Before τ = 0 you launched the stars in bursts. Each burst cost you a slice of mass,
   // radiated outward as a flash of light (an exact Vaidya shell); the stars are test particles.
   const M_GALAXIES = 0.2;          // mass (c²/8G) you launched as galaxies before τ = 0
-  const STAR_BURSTS = [-3.4, -2.6, -1.9, -1.3, -0.8, -0.4];   // your proper time (ℓ)
+  const STAR_BURSTS = [-1.8, -1.4, -1.05, -0.75, -0.5, -0.25];   // your proper time (ℓ); all seen well inside the edge at τ = 0
   function reset() {
     readUI();
     const mStars = Math.min(M_GALAXIES, Math.max(0, 0.96 - ui.m0));
