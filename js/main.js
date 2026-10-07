@@ -92,7 +92,7 @@
       }
     }
     const playing = S ? S.playing : true;
-    S = { st, sources, tau: 0, u: 0, playing, m0: ui.m0, nBeacons: 0, flashes: [], frame: 0, cone: null,
+    S = { st, sources, tau: 0, u: 0, playing, m0: ui.m0, rc0: st.aNow, nBeacons: 0, flashes: [], frame: 0, cone: null,
           oldHorizons,
           pen: { ver: -1 }, tailFrame: -1 };
     readUI();
@@ -486,9 +486,10 @@
       ah.push(seg);
     }
     S.pen.ah = ah;
-    // The curve r = r_c,0: the apparent-horizon radius when the game started (τ = 0).
-    const rc0 = st.aR[st.region(st.uOfTau(0))], rcl = [];
-    for (let u = Math.min(-12, (st.shellU.length ? st.shellU[0] : 0) - 8); u <= st.uOfTau(0) + 60; u += 0.1) {
+    // The curve r = r_c,0 (the horizon radius when the game started), from τ = 0 on: an observer holding
+    // still at that distance from you. Null (on the horizon) until your first launch, timelike after.
+    const u0 = st.uOfTau(0), rc0 = S.rc0, rcl = [];
+    for (let u = u0; u <= u0 + 60; u += 0.05) {
       rcl.push([st.tau(u), ...st.labelVlog(u, rc0)]);
     }
     S.pen.rc0 = rcl;
