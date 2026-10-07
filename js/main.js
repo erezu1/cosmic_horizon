@@ -483,16 +483,24 @@
         const uu = i === M && k < nR - 1 ? u - 1e-9 : u;
         seg.push([st.tau(uu), ...st.labelVlog(uu, st.aR[k])]);
       }
+      // Before the outgoing rays begin (U → 0), r = r_c of the first era is the past horizon
+      // U = 0, which runs down to your τ = −∞ (V → −∞).
+      if (k === 0) seg.unshift([-Infinity, seg[0][1], -Infinity], [-Infinity, seg[0][1], seg[0][2]]);
       ah.push(seg);
     }
     S.pen.ah = ah;
     // The curve r = r_c,0, the visible edge when the game started: an observer holding still at that
-    // distance from you. Kept with its timelike flag (r < r_c of that era); trimmed to your past when drawn.
+    // distance from you. Each point is flagged 2 where timelike (r < r_c of that era) and 1 where null
+    // (r = r_c, on the horizon); trimmed to your past when drawn. Since the past cone reaches the past
+    // horizon U = 0, where r = r_c of the first era, r_c,0 is that radius, so the curve is the first-era
+    // horizon until the first shell (and the past horizon down to τ = −∞ before that).
     const rc0 = S.rc0, rcl = [];
+    const kindOf = a => Math.abs(rc0 - a) <= 1e-9 * a ? 1 : rc0 < a ? 2 : 0;
     for (let u = Math.min(-40, (st.shellU.length ? st.shellU[0] : 0) - 30); u <= st.uOfTau(0) + 60; u += 0.05) {
       const k = st.region(u);
-      rcl.push([st.tau(u), ...st.labelVlog(u, rc0), rc0 < st.aR[k]]);
+      rcl.push([st.tau(u), ...st.labelVlog(u, rc0), kindOf(st.aR[k])]);
     }
+    S.pen.rc0Null = rcl[0][3] === 1 ? rcl[0][2] : null;   // t of the null line V = V_0, or null
     S.pen.rc0 = rcl;
     S.pen.ver = st.version;
   }
@@ -612,20 +620,29 @@
     c.lineWidth = 2.4;
     { const [x1, y1] = toXY(g, Pn, Qn), [x2, y2] = toXY(g, Pn, HALF - Pn); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
 
-    // r = r_c,0 (solid cream line).
-    // Only the part in your past (its light has reached you) where it is timelike (inside the horizon
-    // of that era); earlier that radius was beyond the horizon and r = const is not a worldline.
+    // r = r_c,0 (solid cream line), only the part in your past (its light has reached you),
+    // V = −e^{−t} ≤ V_now.  Where it is the first-era horizon it is null: up the past horizon U = 0
+    // from your τ = −∞ (growing as V_now does), then V = V_0 to the first shell, which reaches you all
+    // at once (faded in).  After that it is timelike, inside the larger horizons.
     c.strokeStyle = PEN.rc0; c.lineWidth = 2.6;
-    {
+    const t0 = S.pen.rc0Null, rcp = S.pen.rc0;
+    if (t0 !== null) {
+      const [x1, y1] = toXY(g, 0, mapQ(-1, -Infinity)), [x2, y2] = toXY(g, 0, mapQ(-1, Math.min(S.tau, t0)));
+      c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke();
+    }
+    c.globalAlpha = fade('rc0null', t0 !== null && S.tau >= t0);
+    for (const kind of [1, 2]) {
       let on = false;
       c.beginPath();
-      for (const [lnU, sg, t, timelike] of S.pen.rc0) {
-        const ok = timelike && sg < 0 && t <= S.tau;   // V = −e^{−t} ≤ V_now: in your past
-        if (!ok) { on = false; continue; }
+      rcp.forEach(([lnU, sg, t, k], i) => {
+        // The timelike pass starts from the last null point so the two join.
+        const mine = k === kind || (kind === 2 && k === 1 && rcp[i + 1] && rcp[i + 1][3] === 2);
+        if (!(mine && sg < 0 && t <= S.tau + 1e-9)) { on = false; return; }
         const [x, y] = toXY(g, mapP(lnU), mapQ(sg, t));
         if (on) c.lineTo(x, y); else { c.moveTo(x, y); on = true; }
-      }
+      });
       c.stroke();
+      c.globalAlpha = 1;
     }
 
     // Apparent horizon (dashed) and event horizon V = 0 (solid): the same hot colour.

@@ -191,8 +191,9 @@ button:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
 
 @media (max-width: 560px) { .brand .tag { display: none; } }
 @media (max-width: 420px) {
-  .logo { display: none; }
-  .brand h1 { font-size: 15px; }
+  .brand { gap: 8px; }
+  .logo { width: 26px; height: 26px; }
+  .brand h1 { font-size: 14px; letter-spacing: 0.03em; }
   .actions { gap: 6px; }
   .icon { width: 40px; height: 40px; }
   .toolbar { gap: 6px; padding: 6px; }
@@ -200,6 +201,7 @@ button:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
   .seg button { padding: 0 10px; }
   #spectrum { height: 58px; }
 }
+@media (max-width: 370px) { .actions { gap: 4px; } .icon { width: 37px; height: 37px; } }
 @media (max-width: 360px) { .tool span { display: none; } }
 
 .wide-only { display: none; }
