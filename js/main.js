@@ -415,6 +415,7 @@
     past: '#ffc94d', pastFill: 'rgba(255,201,77,0.16)',
     future: '#7ec8ff', futureFill: 'rgba(126,200,255,0.11)',
     horizon: '#ff5c8a', horizonDim: 'rgba(255,92,138,0.75)',
+    you: '#3fc1c9',
     now: '#f3ead8', galaxy: 'rgba(185,167,255,0.6)', galaxyFuture: 'rgba(185,167,255,0.28)',
     beacon: '#ff6b35', beaconFuture: 'rgba(255,107,53,0.45)',
   };
@@ -643,13 +644,15 @@
     c.fillStyle = PEN.muted;
     c.textAlign = 'center';
     c.fillText('I⁺', g.cx, top - 8);
+
+    // Your worldline (r = 0, the left edge): thick, in its own teal, labelled "you".
+    c.strokeStyle = PEN.you; c.lineWidth = 4; c.lineCap = 'butt';
+    c.beginPath(); c.moveTo(left, top); c.lineTo(left, bot); c.stroke();
     c.save();
-    c.translate(left - 12, g.cy + 0.55 * HALF * g.s); c.rotate(-HALF);
-    c.fillText('you · r = 0', 0, 0);
-    c.restore();
-    c.save();
-    c.translate(g.cx + HALF * g.s + 12, g.cy); c.rotate(HALF);
-    c.fillText('antipode', 0, 0);
+    c.translate(left - 14, g.cy + 0.55 * HALF * g.s); c.rotate(-HALF);
+    c.font = '700 13px "Space Mono", monospace';
+    c.fillStyle = PEN.you;
+    c.fillText('you', 0, 0);
     c.restore();
 
     // The Now dot goes on top of everything.
