@@ -260,7 +260,7 @@
 
     // You: a little rocket, larger the more mass you still carry.
     const rm = 3 + 7 * mNow;
-    rocket(c, cx, cy, 2.6 * rm + 10);
+    rocket(c, cx, cy, 1.2 * rm + 8);
 
     // Launch flashes (just a UI cue at your position).
     S.flashes = S.flashes.filter(f => now - f.t < 700);
@@ -273,41 +273,20 @@
 
   }
 
-  // A rocket of height H centred on (x, y), nose up.
+  // A minimal rocket silhouette of height H centred on (x, y), nose up.
   function rocket(c, x, y, H) {
-    const w = 0.34 * H, top = y - 0.5 * H, bot = y + 0.36 * H;
-    c.save();
-    c.lineJoin = 'round';
-    // fins
-    c.fillStyle = '#e8564f';
+    const w = 0.3 * H, top = y - 0.5 * H, bot = y + 0.3 * H;
+    c.fillStyle = '#e9edff';
     c.beginPath();
-    c.moveTo(x - 0.5 * w, bot - 0.32 * H); c.lineTo(x - 0.95 * w, bot + 0.1 * H); c.lineTo(x - 0.5 * w, bot); c.closePath();
-    c.moveTo(x + 0.5 * w, bot - 0.32 * H); c.lineTo(x + 0.95 * w, bot + 0.1 * H); c.lineTo(x + 0.5 * w, bot); c.closePath();
+    c.moveTo(x, top);                                                     // nose
+    c.quadraticCurveTo(x + 0.62 * w, top + 0.3 * H, x + 0.5 * w, bot - 0.1 * H);
+    c.lineTo(x + w, y + 0.5 * H);                                         // right fin
+    c.lineTo(x + 0.3 * w, bot);
+    c.lineTo(x - 0.3 * w, bot);
+    c.lineTo(x - w, y + 0.5 * H);                                         // left fin
+    c.lineTo(x - 0.5 * w, bot - 0.1 * H);
+    c.quadraticCurveTo(x - 0.62 * w, top + 0.3 * H, x, top);
     c.fill();
-    // body with a rounded nose
-    c.fillStyle = '#f2f4fb';
-    c.beginPath();
-    c.moveTo(x, top);
-    c.bezierCurveTo(x + 0.62 * w, top + 0.2 * H, x + 0.5 * w, top + 0.45 * H, x + 0.5 * w, bot);
-    c.lineTo(x - 0.5 * w, bot);
-    c.bezierCurveTo(x - 0.5 * w, top + 0.45 * H, x - 0.62 * w, top + 0.2 * H, x, top);
-    c.fill();
-    // nose cone
-    c.fillStyle = '#e8564f';
-    c.beginPath();
-    c.moveTo(x, top);
-    c.bezierCurveTo(x + 0.42 * w, top + 0.1 * H, x + 0.5 * w, top + 0.18 * H, x + 0.52 * w, top + 0.22 * H);
-    c.lineTo(x - 0.52 * w, top + 0.22 * H);
-    c.bezierCurveTo(x - 0.5 * w, top + 0.18 * H, x - 0.42 * w, top + 0.1 * H, x, top);
-    c.fill();
-    // window
-    c.fillStyle = '#5aa9e6';
-    c.strokeStyle = '#9aa6c4'; c.lineWidth = Math.max(1, 0.035 * H);
-    circle(c, x, y - 0.08 * H, 0.17 * w + 1); c.fill(); c.stroke();
-    // nozzle
-    c.fillStyle = '#9aa6c4';
-    c.fillRect(x - 0.28 * w, bot, 0.56 * w, 0.07 * H);
-    c.restore();
   }
 
   function drawStar(c, s, cx, cy, R) {
