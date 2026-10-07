@@ -343,16 +343,6 @@
     c.fillStyle = rgba(col, Math.min(1, 0.25 + al));
     starPath(c, x, y, rad * 2.4, rad * 1.0, 0); c.fill();
 
-    // Message flash: once per MSG_PERIOD of the beacon's own clock, as received.
-    const ph = (e.tau / MSG_PERIOD) % 1;
-    if (ph < 0.3) {
-      const p = ph / 0.3;
-      c.setLineDash(dash);
-      c.strokeStyle = rgba(col, (1 - p) * Math.max(al, 0.4));
-      c.lineWidth = 1.4;
-      circle(c, x, y, 4 + 10 * p); c.stroke();
-      c.setLineDash([]);
-    }
 
     if (labelsOn) {                 // names only while the beacon list is open
       c.fillStyle = `rgba(230,236,255,${0.45 + 0.4 * Math.min(1, al)})`;
