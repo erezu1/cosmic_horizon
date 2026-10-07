@@ -70,8 +70,9 @@ const Colors = (function () {
       return oklchRGB(L, C, hueOf(nm));
     }
     if (nm < 1e6) {
+      // Continue smoothly from the red end of the visible palette into dark infrared.
       const t = Math.log10(nm / 750) / Math.log10(1e6 / 750);
-      return lerp([150, 10, 10], [80, 30, 30], t);
+      return lerp(physicalRGB(749.999), [70, 28, 28], Math.min(1, 3 * t));
     }
     if (nm < 1e9) return [85, 85, 100];
     return [65, 65, 78];

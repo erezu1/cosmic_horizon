@@ -157,6 +157,9 @@
     return { w, h, dpr };
   }
   const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+  // In the infrared camera, fade out smoothly over the last two decades before Z_LOST.
+  const irFade = z1 => Math.min(1, Math.max(0, (Math.log10(Z_LOST) - Math.log10(z1)) / 2));
+
   // Brightness follows the received colour: full up to blue, then fading steeply,
   // so reds are already faint and the infrared nearly gone (schematic, not photometric).
   const brightness = (z1, lam) => Math.min(1, Math.pow(lam / 450, -3));
@@ -277,12 +280,12 @@
     const x = cx + e.r * R * Math.cos(s.phi), y = cy - e.r * R * Math.sin(s.phi);
     const col = Colors.rgb(e.lam, ui.ir);
     let al = brightness(e.z1, e.lam);
-    if (ui.ir) al = Math.max(al, 0.6);
+    if (ui.ir) al = Math.max(al, 0.6 * irFade(e.z1));
     const g = c.createRadialGradient(x, y, 0, x, y, ICON_R * 1.6);
     g.addColorStop(0, rgba(col, 0.45 * al));
     g.addColorStop(1, rgba(col, 0));
     c.fillStyle = g; circle(c, x, y, ICON_R * 1.6); c.fill();
-    galaxy(c, x, y, ICON_R, s.rot, s.tilt, col, Math.min(1, 0.12 + al));
+    galaxy(c, x, y, ICON_R, s.rot, s.tilt, col, Math.min(1, al));
   }
 
   // A small two-armed spiral galaxy of outer radius R: bright bulge, logarithmic arms, tilted.
@@ -320,8 +323,8 @@
     const x = cx + dist * cos, y = cy - dist * sin;
     const col = Colors.rgb(e.lam, ui.ir);
     const band = Colors.band(e.lam);
-    let al = Math.max(0.12, brightness(e.z1, e.lam));
-    if (ui.ir) al = Math.max(al, 0.75);
+    let al = brightness(e.z1, e.lam);
+    if (ui.ir) al = Math.max(al, 0.75 * irFade(e.z1));
     const dash = ui.ir ? [] : band === 'infrared' ? [3, 2] : (band === 'microwave' || band === 'radio') ? [1, 3] : [];
 
     // Wave glyph: a wavetrain heading to you, its drawn wavelength stretching with 1+z.
@@ -351,9 +354,9 @@
     c.fillStyle = g; circle(c, x, y, ICON_R * 1.6); c.fill();
     const br = ICON_R * 0.75;   // the solid ball reads larger than open spiral arms
     const gs = c.createRadialGradient(x - 0.35 * br, y - 0.35 * br, 0, x, y, br);
-    gs.addColorStop(0, `rgba(255,255,255,${Math.min(1, 0.25 + al)})`);
-    gs.addColorStop(0.55, rgba(col, Math.min(1, 0.12 + al)));
-    gs.addColorStop(1, rgba(col.map(v => Math.round(v * 0.55)), Math.min(1, 0.12 + al)));
+    gs.addColorStop(0, `rgba(255,255,255,${Math.min(1, al)})`);
+    gs.addColorStop(0.55, rgba(col, Math.min(1, al)));
+    gs.addColorStop(1, rgba(col.map(v => Math.round(v * 0.55)), Math.min(1, al)));
     c.fillStyle = gs; circle(c, x, y, br); c.fill();
 
 
