@@ -612,6 +612,15 @@
       drawWorldline(c, g, s, PEN.beacon, PEN.beaconFuture);
     }
 
+    // What you are seeing right now: emission events on the past cone (under the past line).
+    for (const s of S.sources) {
+      const e = s.obs;
+      if (!e || e.z1 > Z_LOST || (s.kind === 'star' && !ui.stars)) continue;
+      const [x, y] = toXY(g, mapP(st.tau(e.u)), mapQ(...st.labelVlog(e.u, e.r)));
+      c.fillStyle = s.kind === 'star' ? PEN.galaxy : PEN.beacon;
+      circle(c, x, y, s.kind === 'star' ? 1.8 : 3); c.fill();
+    }
+
     // Your light cones now.
     c.strokeStyle = PEN.past;
     c.lineWidth = 3;
@@ -655,14 +664,6 @@
     c.lineWidth = 3;
     { const [x1, y1] = toXY(g, HALF, 0), [x2, y2] = toXY(g, -HALF, 0); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
 
-    // What you are seeing right now: emission events on the past cone.
-    for (const s of S.sources) {
-      const e = s.obs;
-      if (!e || e.z1 > Z_LOST || (s.kind === 'star' && !ui.stars)) continue;
-      const [x, y] = toXY(g, mapP(st.tau(e.u)), mapQ(...st.labelVlog(e.u, e.r)));
-      c.fillStyle = s.kind === 'star' ? PEN.galaxy : PEN.beacon;
-      circle(c, x, y, s.kind === 'star' ? 1.8 : 3); c.fill();
-    }
     c.restore();
 
     c.strokeStyle = PEN.frame;
