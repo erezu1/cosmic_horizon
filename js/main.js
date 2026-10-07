@@ -92,7 +92,7 @@
       }
     }
     const playing = S ? S.playing : true;
-    S = { st, sources, tau: 0, u: 0, playing, m0: ui.m0, rc0: st.aNow, nBeacons: 0, flashes: [], frame: 0, cone: null,
+    S = { st, sources, tau: 0, u: 0, playing, m0: ui.m0, rc0: DS.coneMaxR(st.pastCone(st.uOfTau(0))), nBeacons: 0, flashes: [], frame: 0, cone: null,
           oldHorizons,
           pen: { ver: -1 }, tailFrame: -1 };
     readUI();
@@ -486,11 +486,12 @@
       ah.push(seg);
     }
     S.pen.ah = ah;
-    // The curve r = r_c,0 (the horizon radius when the game started), from τ = 0 on: an observer holding
-    // still at that distance from you. Null (on the horizon) until your first launch, timelike after.
-    const u0 = st.uOfTau(0), rc0 = S.rc0, rcl = [];
-    for (let u = u0; u <= u0 + 60; u += 0.05) {
-      rcl.push([st.tau(u), ...st.labelVlog(u, rc0)]);
+    // The curve r = r_c,0, the visible edge when the game started: an observer holding still at that
+    // distance from you. Kept with its timelike flag (r < r_c of that era); trimmed to your past when drawn.
+    const rc0 = S.rc0, rcl = [];
+    for (let u = Math.min(-12, (st.shellU.length ? st.shellU[0] : 0) - 8); u <= st.uOfTau(0) + 60; u += 0.05) {
+      const k = st.region(u);
+      rcl.push([st.tau(u), ...st.labelVlog(u, rc0), rc0 < st.aR[k]]);
     }
     S.pen.rc0 = rcl;
     S.pen.ver = st.version;
@@ -611,10 +612,20 @@
     c.lineWidth = 2.4;
     { const [x1, y1] = toXY(g, Pn, Qn), [x2, y2] = toXY(g, Pn, HALF - Pn); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
 
-    // r = r_c,0: a solid cream line, wider than and drawn under the horizons. Before any launch it lies
-    // on the event horizon, which then shows as pink with a cream edge; afterwards the two separate.
-    c.strokeStyle = PEN.rc0; c.lineWidth = 6;
-    { const L = S.pen.rc0; strokeRaw(c, g, L.map(p => p[0]), L.map(p => p[1]), L.map(p => p[2])); }
+    // r = r_c,0 (solid cream line).
+    // Only the part in your past (before now, inside your past light cone) where it is timelike.
+    c.strokeStyle = PEN.rc0; c.lineWidth = 2.6;
+    {
+      let on = false;
+      c.beginPath();
+      for (const [lnU, sg, t, timelike] of S.pen.rc0) {
+        const ok = timelike && sg < 0 && t <= S.tau;   // its light has reached you: V = −e^{−t} ≤ V_now
+        if (!ok) { on = false; continue; }
+        const [x, y] = toXY(g, mapP(lnU), mapQ(sg, t));
+        if (on) c.lineTo(x, y); else { c.moveTo(x, y); on = true; }
+      }
+      c.stroke();
+    }
 
     // Apparent horizon (dashed) and event horizon V = 0 (solid): the same hot colour.
     c.strokeStyle = PEN.horizonDim;
