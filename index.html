@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="style.css?v=64">
+<link rel="stylesheet" href="style.css?v=65">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -115,7 +115,7 @@
     <p>Lengths are in $\ell$, times in $\ell/c$, masses in $c^2/8G$ (the largest possible mass).</p>
 
     <h3>The sky</h3>
-    <p>Each object is drawn where it was when it sent the light reaching you now. Its colour is the wavelength you receive, computed exactly through the changing geometry, and it fades as the light reddens. Galaxies look flattened along your line of sight, as light from their near and far ends implies.</p>
+    <p>Each object is drawn where it was when it sent the light reaching you now. Its colour is the wavelength you receive, computed exactly through the changing geometry, and it fades as its light is redshifted. Galaxies look flattened along your line of sight, as light from their near and far ends implies.</p>
     <ul>
       <li><b>Dotted circle, $r=\ell$:</b> the horizon of empty de Sitter, reached once you have given away all your mass.</li>
       <li><b>Dashed circle, $r_c$:</b> the apparent horizon for your present mass. It jumps outward when you launch.</li>
@@ -130,9 +130,9 @@
 
     <h3>Things to notice</h3>
     <ul>
-      <li>Everything reddens by a factor $e$ per $\ell/c$ of your time, whatever your mass. The mass only sets how big the horizon is.</li>
+      <li>Redshifts grow by a factor $e$ per $\ell/c$ of your time, $1+z \propto e^{\tau/\ell}$, whatever your mass. The mass only sets how big the horizon is.</li>
       <li>Images pile up at the horizon and never cross it; each beacon has a last message you will ever receive.</li>
-      <li>Launching makes everything beyond the shell look slightly bluer: its light gains energy crossing the shell on its way to you.</li>
+      <li>Each launch makes every galaxy jump slightly bluer, by $\sqrt{1-8GM_{\text{old}}/c^2}\,\big/\sqrt{1-8GM_{\text{new}}/c^2}$. Their light now has to cross your outgoing shell, from the old, heavier region into the new, lighter one around you, and it gains energy doing so, like light falling into a shell of mass.</li>
     </ul>
   </section>
 </div>
