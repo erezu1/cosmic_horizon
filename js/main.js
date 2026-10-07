@@ -13,6 +13,7 @@
   const MSG_PERIOD = 0.15 / DOP_LAUNCH;   // beacon proper time per message: one per 0.15ℓ of yours at launch
   const Z_LOST = 1e7;           // beyond this, treat a source as gone from view
   const N_STARS = 90;
+  const SQUASH_MIN = 0.12;        // galaxies are drawn at least this thick along the line of sight
   const ICON_R = 6.5;             // px: outer radius of every galaxy and beacon icon (fixed; brightness only fades it)
   const BURST_TIME = 0.2;        // each pre-game star burst lasts this long (ℓ)…
   const BURST_STEPS = 8;         // …as this many sub-launches, each star carrying its share of the mass
@@ -31,14 +32,14 @@
     ui.ir = $('ir').checked;
     ui.waves = $('waves').checked;
     ui.oldH = $('oldH').checked;
-    ui.stars = $('stars').checked;
+    ui.stars = $('galaxies').checked;
     $('speedVal').textContent = ui.speed.toFixed(2) + ' ℓ/s';
     $('dmVal').textContent = ui.dm.toFixed(2) + ' /8G';
     const pending = S && (Math.abs(ui.m0 - S.m0) > 1e-9 || Math.abs(ui.mStars - S.mStars) > 1e-9);
     $('m0Val').textContent = ui.m0.toFixed(2) + ' /8G' + (pending ? ' · on reset' : '');
     $('mStarsVal').textContent = ui.mStars.toFixed(2) + ' /8G' + (pending ? ' · on reset' : '');
   }
-  for (const id of ['speed', 'dm', 'm0', 'mStars', 'ir', 'waves', 'oldH', 'stars']) $(id).addEventListener('input', readUI);
+  for (const id of ['speed', 'dm', 'm0', 'mStars', 'ir', 'waves', 'oldH', 'galaxies']) $(id).addEventListener('input', readUI);
 
   // ---------- state ----------
   let S = null;
@@ -281,11 +282,18 @@
     const col = Colors.rgb(e.lam, ui.ir);
     let al = brightness(e.z1, e.lam);
     if (ui.ir) al = Math.max(al, 0.6 * irFade(e.z1));
-    const g = c.createRadialGradient(x, y, 0, x, y, ICON_R * 1.6);
+    // Seen along your line of sight, the galaxy is flattened by f·u̇ (what light from its near
+    // and far ends, arriving together now, implies); across the line of sight it keeps its size.
+    // Kept to at least SQUASH_MIN so it stays visible.
+    c.save();
+    c.translate(x, y); c.rotate(-s.phi);
+    c.scale(Math.max(SQUASH_MIN, Math.min(1, e.squash)), 1);
+    const g = c.createRadialGradient(0, 0, 0, 0, 0, ICON_R * 1.6);
     g.addColorStop(0, rgba(col, 0.45 * al));
     g.addColorStop(1, rgba(col, 0));
-    c.fillStyle = g; circle(c, x, y, ICON_R * 1.6); c.fill();
-    galaxy(c, x, y, ICON_R, s.rot, s.tilt, col, Math.min(1, al));
+    c.fillStyle = g; circle(c, 0, 0, ICON_R * 1.6); c.fill();
+    galaxy(c, 0, 0, ICON_R, s.rot, s.tilt, col, Math.min(1, al));
+    c.restore();
   }
 
   // A small two-armed spiral galaxy of outer radius R: bright bulge, logarithmic arms, tilted.

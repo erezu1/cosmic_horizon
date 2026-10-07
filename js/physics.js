@@ -362,10 +362,11 @@ const DS = (function () {
     const disc = Math.sqrt(Math.max(0, E * E - fe));
     const outgoing = (d0 + d1) >= 0;
     // outgoing branch: u̇ = 1/(E + √(E²−f)); ingoing: u̇ = (E + √(E²−f))/f
-    const z1 = outgoing
-      ? cone.aNow * (E + disc) / (fe * sg.D)
-      : cone.aNow / ((E + disc) * sg.D);
-    return { j, u: ue, r: re, tau: te, z1 };
+    const ude = outgoing ? 1 / (E + disc) : (E + disc) / fe;
+    const z1 = cone.aNow / (ude * fe * sg.D);
+    // Apparent radial size per unit proper length: light reaching you now from the near and
+    // far ends of a small object left from areal radii f·u̇·D apart (to first order in D).
+    return { j, u: ue, r: re, tau: te, z1, squash: fe * ude };
   }
 
   return {
