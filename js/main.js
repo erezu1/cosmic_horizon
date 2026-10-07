@@ -407,7 +407,7 @@
     c.font = '400 10.5px "Space Mono", monospace';
     c.textAlign = 'center';
     c.fillStyle = 'rgba(200,210,240,0.75)';
-    const lbl = [['UV', 200], ['vis', 530], ['infrared', 2.5e4], ['microwave', 1e7]];
+    const lbl = [['UV', 200], ['vis', 530], ['IR', 2.5e4], ['microwave', 1e7]];
     for (const [t, nm] of lbl) c.fillText(t, X(nm), 11);
     c.fillStyle = 'rgba(138,150,187,0.8)';
     for (const [t, nm] of [['1 µm', 1e3], ['1 mm', 1e6], ['10 cm', 1e8]]) {

@@ -20,7 +20,7 @@ const Colors = (function () {
   function band(nm) {
     if (nm < 380) return 'UV';
     if (nm < 750) return 'visible';
-    if (nm < 1e6) return 'infrared';
+    if (nm < 1e6) return 'IR';
     if (nm < 1e9) return 'microwave';
     return 'radio';
   }
