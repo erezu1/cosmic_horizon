@@ -231,18 +231,24 @@
     c.strokeStyle = '#ff5c8a';
     c.lineWidth = 2;
     circle(c, cx, cy, re); c.stroke();
-    c.font = '700 11px "Space Mono", monospace';
-    c.fillStyle = '#ff5c8a';
+    // Labels carry a small sample of the line they name: dashed = apparent horizon (fainter),
+    // solid = visible edge. When the two coincide there is one line and one label.
+    const tagged = (txt, y, color, dashed, below) => {
+      c.font = '700 11px "Space Mono", monospace';
+      c.textAlign = 'left';
+      const tw = c.measureText(txt).width, sw = 18, gap = 7, x0 = cx - (sw + gap + tw) / 2;
+      if (below) { c.fillStyle = '#0b1120'; c.beginPath(); c.roundRect(x0 - 7, y - 13, sw + gap + tw + 14, 18, 6); c.fill(); }
+      c.strokeStyle = color; c.lineWidth = dashed ? 1.5 : 2; c.setLineDash(dashed ? [5, 4] : []);
+      c.beginPath(); c.moveTo(x0, y - 4); c.lineTo(x0 + sw, y - 4); c.stroke(); c.setLineDash([]);
+      c.fillStyle = color; c.fillText(txt, x0 + sw + gap, y);
+      c.textAlign = 'center';
+    };
     const ly = cy - rh - 8 < 12 ? cy - rh + 16 : cy - rh - 8;
-    c.fillText(`APPARENT HORIZON  r꜀ = ${aNow.toFixed(3)} ℓ`, cx, ly);
     if (catching) {
-      // Just below the solid circle, on a dark pill so it stays legible over the dashed r_c.
-      const txt = `VISIBLE EDGE ${rEdge.toFixed(3)} ℓ`;
-      const tw = c.measureText(txt).width, ty = cy + re + 17;
-      c.fillStyle = '#0b1120';
-      c.beginPath(); c.roundRect(cx - tw / 2 - 7, ty - 13, tw + 14, 18, 6); c.fill();
-      c.fillStyle = '#ff8fae';
-      c.fillText(txt, cx, ty);
+      tagged(`APPARENT HORIZON  r꜀ = ${aNow.toFixed(3)} ℓ`, ly, 'rgba(255,92,138,0.75)', true, false);
+      tagged(`VISIBLE EDGE ${rEdge.toFixed(3)} ℓ`, cy + re + 17, '#ff5c8a', false, true);
+    } else {
+      tagged(`HORIZON  r꜀ = ${aNow.toFixed(3)} ℓ`, ly, '#ff5c8a', false, false);
     }
 
     // Sources.
@@ -688,7 +694,6 @@
     $('hM').textContent = m.toFixed(3);
     $('hRc').textContent = a.toFixed(3);
     $('hEdge').textContent = DS.coneMaxR(S.cone).toFixed(3);
-    $('hDef').textContent = m === 0 ? 'none' : (360 * (1 - a)).toFixed(0) + '°';
     $('hS').textContent = a.toFixed(3);
   }
 
