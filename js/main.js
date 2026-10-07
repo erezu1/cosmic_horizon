@@ -613,22 +613,20 @@
     { const [x1, y1] = toXY(g, Pn, Qn), [x2, y2] = toXY(g, Pn, HALF - Pn); c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.stroke(); }
 
     // r = r_c,0 (solid cream line).
-    // Only the part in your past (its light has reached you). Solid where it is timelike (inside the
-    // horizon of that era); dashed where that radius was beyond the horizon, so r = const is spacelike.
+    // Only the part in your past (its light has reached you) where it is timelike (inside the horizon
+    // of that era); earlier that radius was beyond the horizon and r = const is not a worldline.
     c.strokeStyle = PEN.rc0; c.lineWidth = 2.6;
-    for (const want of [true, false]) {
+    {
       let on = false;
-      c.setLineDash(want ? [] : [5, 5]);
       c.beginPath();
       for (const [lnU, sg, t, timelike] of S.pen.rc0) {
-        const ok = timelike === want && sg < 0 && t <= S.tau;   // V = −e^{−t} ≤ V_now: in your past
+        const ok = timelike && sg < 0 && t <= S.tau;   // V = −e^{−t} ≤ V_now: in your past
         if (!ok) { on = false; continue; }
         const [x, y] = toXY(g, mapP(lnU), mapQ(sg, t));
         if (on) c.lineTo(x, y); else { c.moveTo(x, y); on = true; }
       }
       c.stroke();
     }
-    c.setLineDash([]);
 
     // Apparent horizon (dashed) and event horizon V = 0 (solid): the same hot colour.
     c.strokeStyle = PEN.horizonDim;
