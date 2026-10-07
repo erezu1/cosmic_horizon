@@ -13,7 +13,7 @@
   const MSG_PERIOD = 0.15 / DOP_LAUNCH;   // beacon proper time per message: one per 0.15ℓ of yours at launch
   const Z_LOST = 1e7;           // beyond this, treat a source as gone from view
   const N_STARS = 90;
-  const STAR_SIZE = 2.6;          // one size for stars and beacons
+  const ICON_R = 6.5;             // px: outer radius of every galaxy and beacon icon (fixed; brightness only fades it)
   const BURST_TIME = 0.2;        // each pre-game star burst lasts this long (ℓ)…
   const BURST_STEPS = 8;         // …as this many sub-launches, each star carrying its share of the mass
   const RING_N = 12;
@@ -81,7 +81,7 @@
           sources.push({
             kind: 'star', phi: off + TAU * (j + 0.8 * (rnd() - 0.5)) / perBurst,
             wl: new Worldline(u, 0, g * (1 - v) / a, 0),
-            lamEm: (260 + 220 * rnd()) / dop, size: STAR_SIZE, jit: rnd(), rot: rnd() * TAU, tilt: 0.35 + 0.5 * rnd(),
+            lamEm: (260 + 220 * rnd()) / dop, jit: rnd(), rot: rnd() * TAU, tilt: 0.35 + 0.5 * rnd(),
             hint: 1e9, obs: null, pq: newPQ(), tail: null,
           });
         }
@@ -278,15 +278,15 @@
     const col = Colors.rgb(e.lam, ui.ir);
     let al = brightness(e.z1, e.lam);
     if (ui.ir) al = Math.max(al, 0.6);
-    const rad = s.size * (0.6 + 0.6 * al);
-    const g = c.createRadialGradient(x, y, 0, x, y, rad * 4);
-    g.addColorStop(0, rgba(col, 0.55 * al));
+    const g = c.createRadialGradient(x, y, 0, x, y, ICON_R * 1.6);
+    g.addColorStop(0, rgba(col, 0.45 * al));
     g.addColorStop(1, rgba(col, 0));
-    c.fillStyle = g; circle(c, x, y, rad * 4); c.fill();
-    galaxy(c, x, y, rad * 3.2, s.rot, s.tilt, col, Math.min(1, 0.12 + al));
+    c.fillStyle = g; circle(c, x, y, ICON_R * 1.6); c.fill();
+    galaxy(c, x, y, ICON_R, s.rot, s.tilt, col, Math.min(1, 0.12 + al));
   }
 
-  // A small two-armed spiral galaxy: bright bulge, logarithmic arms, seen at an angle.
+  // A small two-armed spiral galaxy of outer radius R: bright bulge, logarithmic arms, tilted.
+  const ARM_END = 1.7 * PI, ARM_K = 0.33, ARM_R0 = 1 / Math.exp(ARM_K * ARM_END);   // arms end at r = R
   function galaxy(c, x, y, R, rot, tilt, col, al) {
     c.save();
     c.translate(x, y); c.rotate(rot); c.scale(1, tilt);
@@ -294,19 +294,19 @@
     for (let arm = 0; arm < 2; arm++) {
       c.beginPath();
       for (let k = 0; k <= 24; k++) {
-        const th = 1.7 * PI * k / 24, r = 0.22 * R * Math.exp(0.33 * th);
+        const th = ARM_END * k / 24, r = ARM_R0 * R * Math.exp(ARM_K * th);
         const px = r * Math.cos(th + arm * PI), py = r * Math.sin(th + arm * PI);
         if (k) c.lineTo(px, py); else c.moveTo(px, py);
       }
       c.strokeStyle = rgba(col, 0.7 * al);
-      c.lineWidth = Math.max(0.8, 0.22 * R);
+      c.lineWidth = Math.max(0.8, 0.18 * R);
       c.stroke();
     }
-    const gb = c.createRadialGradient(0, 0, 0, 0, 0, 0.45 * R);
+    const gb = c.createRadialGradient(0, 0, 0, 0, 0, 0.4 * R);
     gb.addColorStop(0, `rgba(255,255,255,${al})`);
     gb.addColorStop(0.45, rgba(col, al));
     gb.addColorStop(1, rgba(col, 0));
-    c.fillStyle = gb; circle(c, 0, 0, 0.45 * R); c.fill();
+    c.fillStyle = gb; circle(c, 0, 0, 0.4 * R); c.fill();
     c.restore();
   }
 
@@ -344,14 +344,12 @@
       c.setLineDash([]);
     }
 
-    // A glowing ball, the same overall size as the galaxies.
-    const rad = STAR_SIZE * (0.6 + 0.6 * Math.min(1, al));
-    const g = c.createRadialGradient(x, y, 0, x, y, rad * 4);
-    g.addColorStop(0, rgba(col, 0.55 * al));
+    // A glowing, shaded ball with the same outer radius as the galaxies.
+    const g = c.createRadialGradient(x, y, 0, x, y, ICON_R * 1.6);
+    g.addColorStop(0, rgba(col, 0.45 * al));
     g.addColorStop(1, rgba(col, 0));
-    c.fillStyle = g; circle(c, x, y, rad * 4); c.fill();
-    // A shaded ball: highlight towards the upper left.
-    const br = rad * 1.5;
+    c.fillStyle = g; circle(c, x, y, ICON_R * 1.6); c.fill();
+    const br = ICON_R * 0.75;   // the solid ball reads larger than open spiral arms
     const gs = c.createRadialGradient(x - 0.35 * br, y - 0.35 * br, 0, x, y, br);
     gs.addColorStop(0, `rgba(255,255,255,${Math.min(1, 0.25 + al)})`);
     gs.addColorStop(0.55, rgba(col, Math.min(1, 0.12 + al)));
