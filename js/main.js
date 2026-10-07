@@ -271,8 +271,8 @@
     // Crossfade between the two-circle labels and the single "HORIZON" label.
     if (catching > 0) {
       c.globalAlpha = catching;
-      tagged(`APPARENT HORIZON  r꜀ = ${aNow.toFixed(3)} ℓ`, ly, 'rgba(255,92,138,0.75)', true, false);
-      tagged(`EVENT HORIZON ${rEdge.toFixed(3)} ℓ`, cy + re + 17, '#ff5c8a', false, true);
+      tagged(`EVENT HORIZON  r꜀ = ${aNow.toFixed(3)} ℓ`, ly, 'rgba(255,92,138,0.75)', true, false);
+      tagged(`APPARENT HORIZON ${rEdge.toFixed(3)} ℓ`, cy + re + 17, '#ff5c8a', false, true);
     }
     if (catching < 1) {
       c.globalAlpha = 1 - catching;
