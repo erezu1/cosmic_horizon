@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="style.css?v=62">
+<link rel="stylesheet" href="style.css?v=63">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -108,47 +108,30 @@
     <header><h2>What am I looking at?</h2><button class="icon sm" data-close aria-label="Close"><svg><use href="#i-close"/></svg></button></header>
 
     <h3>The spacetime</h3>
-    <p>You sit on a point mass $M$ in 2+1 dimensional de Sitter space. As you radiate mass outward, the geometry is the outgoing Vaidya–de Sitter solution, which is exact:</p>
-    $$\begin{gathered} ds^2 = -f\,du^2 - 2\,du\,dr + r^2 d\phi^2,\\ f(u,r) = 1 - \frac{8GM(u)}{c^2} - \frac{r^2}{\ell^2}. \end{gathered}$$
-    <p>Here $u$ is retarded time and $r$ is the areal radius (circumference$/2\pi$). In three dimensions a point mass makes no black hole. It makes a cone with deficit angle $2\pi\bigl(1-\sqrt{1-8GM}\bigr)$, and your cosmological horizon sits at</p>
-    $$r_c = \ell\sqrt{1-8GM/c^2},\qquad \frac{S}{S_{\mathrm{dS}}} = \frac{r_c}{\ell}.$$
-
-    <h3>Units</h3>
-    <p>Lengths are in units of $\ell$ and times in units of $\ell/c$. In 2+1 dimensions $GM/c^2$ is dimensionless (a deficit angle), so masses are given in units of $c^2/8G$. The maximum mass is $M = c^2/8G$: the deficit reaches $2\pi$ and the horizon shrinks to zero. $M=0$ is empty de Sitter, with $r_c=\ell$. Elsewhere we write $8GM$ for $8GM/c^2$.</p>
+    <p>You sit on a point mass $M$ in 2+1-dimensional de Sitter space. The geometry is exact (Vaidya–de Sitter):</p>
+    $$\begin{gathered} ds^2 = -f\,du^2 - 2\,du\,dr + r^2 d\phi^2,\\ f = 1 - \frac{8GM(u)}{c^2} - \frac{r^2}{\ell^2}, \end{gathered}$$
+    <p>with $r$ the areal radius. In 2+1 dimensions a point mass makes a cone, not a black hole, and your horizon sits at $r_c = \ell\sqrt{1-8GM/c^2}$.</p>
+    <p>Lengths are in $\ell$, times in $\ell/c$, masses in $c^2/8G$ (the largest possible mass).</p>
 
     <h3>The sky</h3>
-    <p>Every object is drawn where it was when it emitted the light reaching you <em>now</em>, i.e. on your past light cone, at its areal radius.</p>
-    <p><b>Galaxy shapes.</b> Light reaching you now from a galaxy's near end and from its far end left from different radii, $f\,\dot u\,D$ apart for a galaxy of size $D$ (in one region, $\sqrt{1-8GM}\,D/(1+z)$). Across your line of sight it keeps its size $D$, which the areal map shows true to scale. Launched at $0.999c$, galaxies appear about $50$–$500\times$ thinner along the line of sight, and flatten further towards the horizon. The drawing shows this thinness on a logarithmic scale (true factor $1/80 \to$ drawn about $55\%$, $1/1000$ or less $\to 20\%$), so the trend stays visible.</p>
-
-    <h3>Colour and redshift</h3>
-    <p>Between shells, light moves along $v = u + 2r_*(r)=\text{const}$ with $dr_*/dr = 1/f$. Ray tracing through every shell the light crossed gives the exact redshift</p>
-    $$\begin{gathered} 1+z = \frac{d\tau_{\text{you}}}{d\tau_{\text{src}}} = \frac{\sqrt{1-8GM_{\text{now}}}}{\dot u\, f\, D},\\ D=\frac{dv}{du_{\text{arr}}}, \end{gathered}$$
-    <p>where $\dot u$ is the source's $du/d\tau$ at emission, and $D$ picks up a factor $f_{\text{new}}/f_{\text{old}}$ at each shell crossing. At launch the beacons' light reaches you stretched by $\sqrt{(1+v)/(1-v)} \approx 45$, so they transmit in the far UV, tuned so you first receive them in the near UV (white-hot): they then cool through blue, green and red into the infrared. The numbers count messages, sent at a rate that reaches you as one per $0.15\,\ell$ at launch.</p>
-
-    <h3>The three circles</h3>
+    <p>Each object is drawn where it was when it sent the light reaching you now. Its colour is the wavelength you receive, computed exactly through the changing geometry, and it fades as the light reddens. Galaxies look flattened along your line of sight, as light from their near and far ends implies.</p>
     <ul>
-      <li><b>$r = \ell$, outer dotted circle (empty dS).</b> The horizon of empty de Sitter space, and the largest your horizon can ever get: you reach it once you have radiated all your mass.</li>
-      <li><b>$r_c$, dashed circle (apparent horizon).</b> The apparent horizon now: where ingoing light momentarily stands still for your present mass, $r_c = \ell\sqrt{1-8GM}$. It jumps outward the moment you emit. If you emit nothing more, this is where your event horizon ends up. When the visible edge has caught up with it, the two coincide and only one circle is drawn.</li>
-      <li><b>Solid circle (visible edge).</b> The farthest areal radius that light reaching your eye right now started from: the outermost point of your past light cone. It is where your past light cone crosses the apparent horizon; in the Penrose diagram, where the gold line meets the dashed pink staircase (marked with a small pink ring after a launch). Nothing you see can lie outside it. After an emission at time $\tau_e$ it catches up with $r_c$ as light from the newly enclosed region arrives:
-      $$\begin{gathered} r_{\text{edge}} = \max\!\Bigl(r_c^{\text{old}},\; r_c^{\text{new}}\tanh\tfrac{\tau-\tau_e}{2\ell}\Bigr). \end{gathered}$$</li>
+      <li><b>Dotted circle, $r=\ell$:</b> the horizon of empty de Sitter, reached once you have given away all your mass.</li>
+      <li><b>Dashed circle, $r_c$:</b> the apparent horizon for your present mass. It jumps outward when you launch.</li>
+      <li><b>Solid circle:</b> the visible edge, the farthest point that the light reaching you now came from. It catches up with $r_c$ over a few $\ell/c$.</li>
     </ul>
-    <p>The faint dotted rings inside are your earlier horizons, $r_c$ at each of your earlier masses.</p>
-
-    <h3>The Penrose diagram</h3>
-    <p>The diagram uses null coordinates $U = e^{\tau_{\text{out}}/\ell}$ and $V = \mp e^{-\tau_{\text{in}}/\ell}$, where $\tau_{\text{out}}$ ($\tau_{\text{in}}$) is your clock reading when the outgoing (ingoing) light ray through a point leaves (reaches) you, compactified with $\arctan$. Light always moves at 45°. Your worldline is $UV=-1$, $\mathscr{I}^+$ is $UV=1$, and the event horizon is $V=0$.</p>
-    <p>Worldlines are drawn up to your future light cone, $u \le u_{\text{now}}$, the part already fixed by what you have emitted; beyond it they are continued assuming you emit nothing more (dashed). Everything you launch moves at $0.999c$, almost along a light ray, so its whole path out to $\mathscr{I}^+$ is fixed within about $0.05\ell$ of your time after launch and the dashed part is rarely visible.</p>
-    <p><b>Now</b> (the default) applies $U\to U e^{-\tau/\ell},\ V\to V e^{\tau/\ell}$, a translation in static time that leaves your worldline and $\mathscr{I}^+$ fixed. The present sits mid-left, and the earlier history is squeezed against the past horizon. Once you have radiated all your mass, the neighbourhood of now is visibly the static patch of empty de Sitter.</p>
 
     <h3>Launching</h3>
-    <p>Everything you launch leaves at $v = 0.999c$ and carries its share of your mass $\Delta M$. At that speed the mass travels with the object as a thin null shell (the exact Vaidya solution, up to $1-v = 0.1\%$), while the object can still send light back to you. Each tap launches a shell of 12 beacons, evenly spaced at a random rotation, so the mass leaves as a ring: the exact circularly symmetric case. Brightness is schematic.</p>
-    <p><b>The galaxies came from you.</b> You started heavier, with mass $M_0 + M_\star$, where $M_\star = 0.2\,c^2/8G$. Before $\tau = 0$ you launched the galaxies in six bursts, at $0.999c$ like your beacons, each burst carrying $M_\star/6$ of your mass. Like beacons, they transmit very blue light, tuned so you would have seen them in the visible at launch. That is why the game opens with a ring of older, smaller horizons and a visible edge still catching up with $r_c$.</p>
+    <p>Each tap sends out a shell of 12 beacons at $0.999c$, carrying $\Delta M$ of your mass. The galaxies came from you too: before the game started you launched them the same way, so you begin with a horizon that is still growing.</p>
+
+    <h3>The Penrose diagram</h3>
+    <p>Light moves at 45°. Gold is your past, everything you have seen; blue is your future, everything you can still reach. The solid pink line is the event horizon (if you launch nothing more), the dashed pink line the apparent horizon, stepping out at each launch, and the small pink ring the visible edge. <b>Now</b> keeps the present in view; <b>Full</b> shows the whole history.</p>
 
     <h3>Things to notice</h3>
     <ul>
-      <li>Galaxies recede and redden as $1+z\propto e^{\tau/\ell}$, whatever the mass. The temperature you measure is $1/2\pi\ell$ for any $M$; the mass changes the horizon's size and entropy, not how fast things fade.</li>
-      <li>Images pile up at the horizon and never cross it. Each beacon has a last message you will ever receive.</li>
-      <li>Each frozen image sits where that object crossed your event horizon, so it records how big your horizon was then. A beacon launched after you have shed mass freezes farther out than an older one, even though the older one is now much farther away: you are still receiving its very old light.</li>
-      <li>When you launch, sources farther out than the launched mass turn bluer by $\sqrt{1-8GM_{\text{old}}}\big/\sqrt{1-8GM_{\text{new}}}$. Crossing the moving shell acts like a radial boost: the two cones, with different deficit angles, are glued along the expanding circle. Unlike 3+1, this step does not fade as the shell grows, because 2+1 gravity has no length scale. Each source returns to normal once the shell has passed it. The same boost kicks slower objects inward, but nothing launched at $0.999c$ is slow enough to be turned around.</li>
+      <li>Everything reddens by a factor $e$ per $\ell/c$ of your time, whatever your mass. The mass only sets how big the horizon is.</li>
+      <li>Images pile up at the horizon and never cross it; each beacon has a last message you will ever receive.</li>
+      <li>Launching makes everything beyond the shell look slightly bluer: its light gains energy crossing the shell on its way to you.</li>
     </ul>
   </section>
 </div>
