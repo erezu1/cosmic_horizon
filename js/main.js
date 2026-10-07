@@ -655,9 +655,10 @@
     c.strokeStyle = PEN.you; c.lineWidth = 4; c.lineCap = 'butt';
     c.beginPath(); c.moveTo(left, top); c.lineTo(left, bot); c.stroke();
     c.save();
-    c.translate(left - 14, g.cy + 0.55 * HALF * g.s); c.rotate(-HALF);
+    c.translate(left - 14, (yn + bot) / 2); c.rotate(-HALF);   // centred on your past worldline, below Now
     c.font = '700 13px "Space Mono", monospace';
     c.fillStyle = PEN.you;
+    c.textAlign = 'center';
     c.fillText('you', 0, 0);
     c.restore();
 
