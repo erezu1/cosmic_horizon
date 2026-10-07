@@ -199,7 +199,6 @@ button:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
   .tool { padding: 0 11px; height: 44px; min-width: 44px; }
   .seg button { padding: 0 10px; }
   #spectrum { height: 58px; }
-  .switches { grid-template-columns: 1fr; }
 }
 @media (max-width: 360px) { .tool span { display: none; } }
 
