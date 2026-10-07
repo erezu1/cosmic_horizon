@@ -81,7 +81,7 @@
           sources.push({
             kind: 'star', phi: off + TAU * (j + 0.8 * (rnd() - 0.5)) / perBurst,
             wl: new Worldline(u, 0, g * (1 - v) / a, 0),
-            lamEm: (260 + 220 * rnd()) / dop, size: STAR_SIZE, jit: rnd(), rot: 0.25 * (rnd() - 0.5),
+            lamEm: (260 + 220 * rnd()) / dop, size: STAR_SIZE, jit: rnd(), rot: rnd() * TAU, tilt: 0.35 + 0.5 * rnd(),
             hint: 1e9, obs: null, pq: newPQ(), tail: null,
           });
         }
@@ -283,20 +283,33 @@
     g.addColorStop(0, rgba(col, 0.55 * al));
     g.addColorStop(1, rgba(col, 0));
     c.fillStyle = g; circle(c, x, y, rad * 4); c.fill();
-    c.fillStyle = rgba(col, Math.min(1, 0.12 + al));
-    starPath(c, x, y, rad * 2.4, rad * 1.0, s.rot); c.fill();
+    galaxy(c, x, y, rad * 3.2, s.rot, s.tilt, col, Math.min(1, 0.12 + al));
   }
 
-  // Five-pointed star outline centred on (x, y).
-  function starPath(c, x, y, rOut, rIn, rot) {
-    c.beginPath();
-    for (let k = 0; k < 10; k++) {
-      const a = rot - HALF + k * PI / 5, r = k % 2 ? rIn : rOut;
-      const px = x + r * Math.cos(a), py = y + r * Math.sin(a);
-      if (k) c.lineTo(px, py); else c.moveTo(px, py);
+  // A small two-armed spiral galaxy: bright bulge, logarithmic arms, seen at an angle.
+  function galaxy(c, x, y, R, rot, tilt, col, al) {
+    c.save();
+    c.translate(x, y); c.rotate(rot); c.scale(1, tilt);
+    c.lineCap = 'round';
+    for (let arm = 0; arm < 2; arm++) {
+      c.beginPath();
+      for (let k = 0; k <= 24; k++) {
+        const th = 1.7 * PI * k / 24, r = 0.22 * R * Math.exp(0.33 * th);
+        const px = r * Math.cos(th + arm * PI), py = r * Math.sin(th + arm * PI);
+        if (k) c.lineTo(px, py); else c.moveTo(px, py);
+      }
+      c.strokeStyle = rgba(col, 0.7 * al);
+      c.lineWidth = Math.max(0.8, 0.22 * R);
+      c.stroke();
     }
-    c.closePath();
+    const gb = c.createRadialGradient(0, 0, 0, 0, 0, 0.45 * R);
+    gb.addColorStop(0, `rgba(255,255,255,${al})`);
+    gb.addColorStop(0.45, rgba(col, al));
+    gb.addColorStop(1, rgba(col, 0));
+    c.fillStyle = gb; circle(c, 0, 0, 0.45 * R); c.fill();
+    c.restore();
   }
+
 
   let labelsOn = false;
   function drawBeacon(c, s, cx, cy, R, t) {
@@ -331,14 +344,19 @@
       c.setLineDash([]);
     }
 
-    // Same star icon and size as the background stars.
+    // A glowing ball, the same overall size as the galaxies.
     const rad = STAR_SIZE * (0.6 + 0.6 * Math.min(1, al));
     const g = c.createRadialGradient(x, y, 0, x, y, rad * 4);
     g.addColorStop(0, rgba(col, 0.55 * al));
     g.addColorStop(1, rgba(col, 0));
     c.fillStyle = g; circle(c, x, y, rad * 4); c.fill();
-    c.fillStyle = rgba(col, Math.min(1, 0.12 + al));
-    starPath(c, x, y, rad * 2.4, rad * 1.0, 0); c.fill();
+    // A shaded ball: highlight towards the upper left.
+    const br = rad * 1.5;
+    const gs = c.createRadialGradient(x - 0.35 * br, y - 0.35 * br, 0, x, y, br);
+    gs.addColorStop(0, `rgba(255,255,255,${Math.min(1, 0.25 + al)})`);
+    gs.addColorStop(0.55, rgba(col, Math.min(1, 0.12 + al)));
+    gs.addColorStop(1, rgba(col.map(v => Math.round(v * 0.55)), Math.min(1, 0.12 + al)));
+    c.fillStyle = gs; circle(c, x, y, br); c.fill();
 
 
     if (labelsOn) {                 // names only while the beacon list is open
