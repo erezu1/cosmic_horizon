@@ -237,26 +237,27 @@
       c.setLineDash([]);
     }
 
-    // Horizon set by your mass now (jumps when you emit).
+    // As in the Penrose diagram: the event horizon (for now) solid, the apparent horizon dashed.
+    // Event horizon: r_c of your mass now (jumps when you emit), if you launch nothing more.
     const rh = aNow * R;
-    const catching = fade('catching', aNow - rEdge > 2e-4);   // 0…1: dashed circle and its labels
+    c.strokeStyle = '#ff5c8a';
+    c.lineWidth = 2;
+    circle(c, cx, cy, rh); c.stroke();
+
+    // The apparent horizon as you see it (the edge of what you see); catches up with r_c.
+    const re = rEdge * R;
+    const catching = fade('catching', aNow - rEdge > 2e-4);   // 0…1: separate dashed circle and labels
     if (catching > 0) {
       c.globalAlpha = catching;
       c.setLineDash([5, 4]);
       c.strokeStyle = 'rgba(255,92,138,0.75)';
       c.lineWidth = 1.5;
-      circle(c, cx, cy, rh); c.stroke();
+      circle(c, cx, cy, re); c.stroke();
       c.setLineDash([]);
       c.globalAlpha = 1;
     }
-
-    // The visible horizon (solid).
-    const re = rEdge * R;
-    c.strokeStyle = '#ff5c8a';
-    c.lineWidth = 2;
-    circle(c, cx, cy, re); c.stroke();
-    // Labels carry a small sample of the line they name: dashed = apparent horizon (fainter),
-    // solid = visible edge. When the two coincide there is one line and one label.
+    // Labels carry a small sample of the line they name: solid = event horizon, dashed = apparent
+    // horizon (fainter). When the two coincide there is one line and one label.
     const tagged = (txt, y, color, dashed, below) => {
       c.font = '700 11px "Space Mono", monospace';
       c.textAlign = 'left';
@@ -271,8 +272,8 @@
     // Crossfade between the two-circle labels and the single "HORIZON" label.
     if (catching > 0) {
       c.globalAlpha = catching;
-      tagged(`EVENT HORIZON  r꜀ = ${aNow.toFixed(3)} ℓ`, ly, 'rgba(255,92,138,0.75)', true, false);
-      tagged(`APPARENT HORIZON ${rEdge.toFixed(3)} ℓ`, cy + re + 17, '#ff5c8a', false, true);
+      tagged(`EVENT HORIZON  r꜀ = ${aNow.toFixed(3)} ℓ`, ly, '#ff5c8a', false, false);
+      tagged(`APPARENT HORIZON ${rEdge.toFixed(3)} ℓ`, cy + re + 17, 'rgba(255,92,138,0.75)', true, true);
     }
     if (catching < 1) {
       c.globalAlpha = 1 - catching;
