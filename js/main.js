@@ -32,7 +32,6 @@
     ui.m0 = +$('m0').value;
     ui.mStars = +$('mStars').value;
     ui.ir = $('ir').checked;
-    ui.waves = $('waves').checked;
     ui.oldH = $('oldH').checked;
     ui.stars = $('galaxies').checked;
     $('speedVal').textContent = ui.speed.toFixed(2) + ' ℓ/s';
@@ -41,7 +40,7 @@
     $('m0Val').textContent = ui.m0.toFixed(2) + ' /8G' + (pending ? ' · on reset' : '');
     $('mStarsVal').textContent = ui.mStars.toFixed(2) + ' /8G' + (pending ? ' · on reset' : '');
   }
-  for (const id of ['speed', 'dm', 'm0', 'mStars', 'ir', 'waves', 'oldH', 'galaxies']) $(id).addEventListener('input', readUI);
+  for (const id of ['speed', 'dm', 'm0', 'mStars', 'ir', 'oldH', 'galaxies']) $(id).addEventListener('input', readUI);
 
   // ---------- state ----------
   let S = null;
@@ -253,10 +252,9 @@
     }
 
     // Sources.
-    const t = now / 1000;
     if (ui.stars) for (const s of S.sources) if (s.kind === 'star') drawStar(c, s, cx, cy, R);
     labelsOn = !$('beaconSheet').hidden;
-    for (const s of S.sources) if (s.kind === 'beacon') drawBeacon(c, s, cx, cy, R, t);
+    for (const s of S.sources) if (s.kind === 'beacon') drawBeacon(c, s, cx, cy, R);
 
     // You: a little rocket, larger the more mass you still carry.
     const rm = 3 + 7 * mNow;
@@ -289,24 +287,31 @@
     c.fill();
   }
 
-  function drawStar(c, s, cx, cy, R) {
+  // Galaxies and beacons share one frame: centred on the image, flattened along your line of
+  // sight by what light from the object's near and far ends implies (f·u̇, log-scaled), with a
+  // faint glow. drawFn draws the icon itself with outer radius ICON_R at the origin.
+  function iconFrame(c, s, cx, cy, R, irBoost, drawFn) {
     const e = s.obs;
-    if (!e || e.z1 > Z_LOST) return;
+    if (!e || e.z1 > Z_LOST) return null;
     const x = cx + e.r * R * Math.cos(s.phi), y = cy - e.r * R * Math.sin(s.phi);
     const col = Colors.rgb(e.lam, ui.ir);
     let al = brightness(e.z1, e.lam);
-    if (ui.ir) al = Math.max(al, 0.6 * irFade(e.z1));
-    // Seen along your line of sight, the galaxy is flattened by f·u̇ (what light from its near
-    // and far ends, arriving together now, implies); across the line of sight it keeps its size.
+    if (ui.ir) al = Math.max(al, irBoost * irFade(e.z1));
+    al = Math.min(1, al);
     c.save();
     c.translate(x, y); c.rotate(-s.phi);
     c.scale(drawnSquash(e.squash), 1);
-    const g = c.createRadialGradient(0, 0, 0, 0, 0, ICON_R * 1.6);
-    g.addColorStop(0, rgba(col, 0.45 * al));
+    const g = c.createRadialGradient(0, 0, 0, 0, 0, ICON_R * 1.3);
+    g.addColorStop(0, rgba(col, 0.18 * al));
     g.addColorStop(1, rgba(col, 0));
-    c.fillStyle = g; circle(c, 0, 0, ICON_R * 1.6); c.fill();
-    galaxy(c, 0, 0, ICON_R, s.rot, s.tilt, col, Math.min(1, al));
+    c.fillStyle = g; circle(c, 0, 0, ICON_R * 1.3); c.fill();
+    drawFn(col, al);
     c.restore();
+    return { x, y, al };
+  }
+
+  function drawStar(c, s, cx, cy, R) {
+    iconFrame(c, s, cx, cy, R, 0.6, (col, al) => galaxy(c, 0, 0, ICON_R, s.rot, s.tilt, col, al));
   }
 
   // A small two-armed spiral galaxy of outer radius R: bright bulge, logarithmic arms, tilted.
@@ -336,51 +341,14 @@
 
 
   let labelsOn = false;
-  function drawBeacon(c, s, cx, cy, R, t) {
-    const e = s.obs;
-    if (!e || e.z1 > Z_LOST) return;
-    const cos = Math.cos(s.phi), sin = Math.sin(s.phi);
-    const dist = e.r * R;
-    const x = cx + dist * cos, y = cy - dist * sin;
-    const col = Colors.rgb(e.lam, ui.ir);
-    const band = Colors.band(e.lam);
-    let al = brightness(e.z1, e.lam);
-    if (ui.ir) al = Math.max(al, 0.75 * irFade(e.z1));
-    const dash = ui.ir ? [] : band === 'infrared' ? [3, 2] : (band === 'microwave' || band === 'radio') ? [1, 3] : [];
-
-    // Wave glyph: a wavetrain heading to you, its drawn wavelength stretching with 1+z.
-    if (ui.waves && dist > 14) {
-      const L = Math.min(34, dist - 8);
-      const lpx = Math.min(90, 3.2 * Math.pow(e.z1, 0.33));
-      const nx = sin, ny = cos;                 // perpendicular to the radial direction (screen)
-      const dx = -cos, dy = sin;                // towards you
-      c.beginPath();
-      for (let k = 0; k <= L; k += 0.75) {
-        const amp = 2.6 * Math.sin(PI * k / L);
-        const off = amp * Math.sin(TAU * (k / lpx) - TAU * 1.2 * t);
-        const px = x + dx * (6 + k) + nx * off, py = y + dy * (6 + k) + ny * off;
-        if (k === 0) c.moveTo(px, py); else c.lineTo(px, py);
-      }
-      c.setLineDash(dash);
-      c.strokeStyle = rgba(col, 0.85 * al);
-      c.lineWidth = 1.3;
-      c.stroke();
-      c.setLineDash([]);
-    }
-
-    // A glowing, shaded ball with the same outer radius as the galaxies.
-    const g = c.createRadialGradient(x, y, 0, x, y, ICON_R * 1.6);
-    g.addColorStop(0, rgba(col, 0.45 * al));
-    g.addColorStop(1, rgba(col, 0));
-    c.fillStyle = g; circle(c, x, y, ICON_R * 1.6); c.fill();
-    const br = ICON_R * 0.75;   // the solid ball reads larger than open spiral arms
-    const gs = c.createRadialGradient(x - 0.35 * br, y - 0.35 * br, 0, x, y, br);
-    gs.addColorStop(0, `rgba(255,255,255,${Math.min(1, al)})`);
-    gs.addColorStop(0.55, rgba(col, Math.min(1, al)));
-    gs.addColorStop(1, rgba(col.map(v => Math.round(v * 0.55)), Math.min(1, al)));
-    c.fillStyle = gs; circle(c, x, y, br); c.fill();
-
-
+  function drawBeacon(c, s, cx, cy, R) {
+    // A solid ball, the same size and flattening as a galaxy.
+    const p = iconFrame(c, s, cx, cy, R, 0.75, (col, al) => {
+      c.fillStyle = rgba(col, al);
+      circle(c, 0, 0, ICON_R); c.fill();
+    });
+    if (!p) return;
+    const { x, y, al } = p, e = s.obs;
     if (labelsOn) {                 // names only while the beacon list is open
       c.fillStyle = `rgba(230,236,255,${0.45 + 0.4 * Math.min(1, al)})`;
       c.font = '12px Manrope, system-ui, sans-serif';
