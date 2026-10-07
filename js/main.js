@@ -306,12 +306,13 @@
     for (const [dx, len, ph] of [[0, 0.55, 0], [-0.16, 0.36, 2.1], [0.16, 0.36, 4.2]]) {
       const L = H * len * env * (0.8 + 0.2 * Math.sin(now / 37 + ph));
       const x0 = x + dx * w, x1 = x0 + dx * w * 0.6;
-      const gr = c.createLinearGradient(x0, bot, x1, bot + L);
-      gr.addColorStop(0, `rgba(255,201,77,${0.9 * env})`);
-      gr.addColorStop(0.5, `rgba(255,107,53,${0.55 * env})`);
+      const gr = c.createLinearGradient(x0, bot - 2, x1, bot + L);
+      gr.addColorStop(0, `rgba(200,220,255,${0.95 * env})`);   // hottest, at the nozzle: UV-ish white
+      gr.addColorStop(0.3, `rgba(255,201,77,${0.8 * env})`);
+      gr.addColorStop(0.65, `rgba(255,107,53,${0.5 * env})`);
       gr.addColorStop(1, 'rgba(255,107,53,0)');
       c.strokeStyle = gr; c.lineWidth = Math.max(1, 0.06 * H);
-      c.beginPath(); c.moveTo(x0, bot + 1); c.lineTo(x1, bot + L); c.stroke();
+      c.beginPath(); c.moveTo(x0, bot - 2); c.lineTo(x1, bot + L); c.stroke();   // starts under the hull
     }
     c.restore();
   }
